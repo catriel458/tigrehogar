@@ -1,4 +1,6 @@
 import { products, type Product, type InsertProduct } from "@shared/schema";
+import { db } from "./db";
+import { eq } from "drizzle-orm";
 
 export interface IStorage {
   getProducts(): Promise<Product[]>;
@@ -6,56 +8,23 @@ export interface IStorage {
   createProduct(product: InsertProduct): Promise<Product>;
 }
 
-export class MemStorage implements IStorage {
-  private products: Map<number, Product>;
-  private currentId: number;
-
-  constructor() {
-    this.products = new Map();
-    this.currentId = 1;
-    
-    // Add some initial products
-    const initialProducts: InsertProduct[] = [
-      {
-        name: "Cozy Knit Blanket",
-        description: "Super soft knitted blanket perfect for chilly evenings",
-        price: 4999,
-        image: "https://images.unsplash.com/photo-1524634126442-357e0eac3c14",
-        category: "Bedding"
-      },
-      {
-        name: "Ceramic Vase Set",
-        description: "Modern ceramic vases in pastel colors",
-        price: 3499,
-        image: "https://images.unsplash.com/photo-1592136957897-b2b6ca21e10d",
-        category: "Decor"
-      },
-      {
-        name: "Kitchen Utensil Set",
-        description: "Complete set of essential kitchen tools",
-        price: 2999,
-        image: "https://images.unsplash.com/photo-1597817109745-c418f4875230",
-        category: "Kitchen"
-      }
-    ];
-
-    initialProducts.forEach(product => this.createProduct(product));
-  }
-
+export class DatabaseStorage implements IStorage {
   async getProducts(): Promise<Product[]> {
-    return Array.from(this.products.values());
+    return await db.select().from(products);
   }
 
   async getProduct(id: number): Promise<Product | undefined> {
-    return this.products.get(id);
+    const [product] = await db.select().from(products).where(eq(products.id, id));
+    return product;
   }
 
   async createProduct(insertProduct: InsertProduct): Promise<Product> {
-    const id = this.currentId++;
-    const product: Product = { ...insertProduct, id };
-    this.products.set(id, product);
+    const [product] = await db
+      .insert(products)
+      .values(insertProduct)
+      .returning();
     return product;
   }
 }
 
-export const storage = new MemStorage();
+export const storage = new DatabaseStorage();
