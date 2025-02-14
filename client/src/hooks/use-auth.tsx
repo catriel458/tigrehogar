@@ -7,6 +7,7 @@ import {
 import { type User, type InsertUser } from "@shared/schema";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { useLocation } from "wouter";
 
 type AuthContextType = {
   user: User | null;
@@ -27,6 +28,7 @@ const AuthContext = createContext<AuthContextType | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const { toast } = useToast();
+  const [, navigate] = useLocation();
 
   const {
     data: user,
@@ -49,6 +51,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         title: "Inicio de sesión exitoso",
         description: `Bienvenido, ${user.username}!`,
       });
+      navigate("/"); // Redirigir a la página principal después del login
     },
     onError: (error: Error) => {
       console.error("Login error:", error);
@@ -102,6 +105,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         title: "Sesión cerrada",
         description: "Has cerrado sesión exitosamente.",
       });
+      navigate("/auth"); // Redirigir al login después de cerrar sesión
     },
   });
 
