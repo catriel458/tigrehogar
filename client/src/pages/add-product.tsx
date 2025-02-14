@@ -15,7 +15,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { queryClient } from "@/lib/queryClient";
+import { queryClient, apiRequest } from "@/lib/queryClient";
 import { insertProductSchema, type InsertProduct } from "@shared/schema";
 import Header from "@/components/layout/header";
 import Footer from "@/components/layout/footer";
@@ -23,7 +23,6 @@ import Footer from "@/components/layout/footer";
 export default function AddProduct() {
   const [, navigate] = useLocation();
   const { toast } = useToast();
-
   const form = useForm<InsertProduct>({
     resolver: zodResolver(insertProductSchema),
     defaultValues: {
@@ -37,30 +36,7 @@ export default function AddProduct() {
 
   const mutation = useMutation({
     mutationFn: async (data: InsertProduct) => {
-      const formData = new FormData();
-
-      // Agregar todos los campos al FormData
-      formData.append("name", data.name);
-      formData.append("description", data.description);
-      formData.append("price", String(data.price));
-      formData.append("category", data.category);
-
-      // Manejar el archivo de imagen
-      if (data.image instanceof File) {
-        formData.append("image", data.image);
-      }
-
-      const response = await fetch("/api/products", {
-        method: "POST",
-        body: formData,
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || "Error al crear el producto");
-      }
-
-      return response.json();
+      await apiRequest("POST", "/api/products", data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/products"] });
@@ -69,13 +45,6 @@ export default function AddProduct() {
         description: "Tu producto ha sido agregado a la tienda.",
       });
       navigate("/");
-    },
-    onError: (error: Error) => {
-      toast({
-        title: "Error al agregar producto",
-        description: error.message,
-        variant: "destructive",
-      });
     },
   });
 
@@ -90,11 +59,7 @@ export default function AddProduct() {
           </CardHeader>
           <CardContent>
             <Form {...form}>
-              <form 
-                onSubmit={form.handleSubmit((data) => mutation.mutate(data))} 
-                className="space-y-4"
-                encType="multipart/form-data"
-              >
+              <form onSubmit={form.handleSubmit((data) => mutation.mutate(data))} className="space-y-4">
                 <FormField
                   control={form.control}
                   name="name"
@@ -147,18 +112,9 @@ export default function AddProduct() {
                   name="image"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Imagen del Producto</FormLabel>
+                      <FormLabel>URL de la Imagen</FormLabel>
                       <FormControl>
-                        <Input
-                          type="file"
-                          accept="image/*"
-                          onChange={(e) => {
-                            const file = e.target.files?.[0];
-                            if (file) {
-                              field.onChange(file);
-                            }
-                          }}
-                        />
+                        <Input {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
