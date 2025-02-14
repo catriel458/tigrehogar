@@ -22,7 +22,7 @@ import Footer from "@/components/layout/footer";
 import { CategorySelect } from "@/components/category-select";
 import { useEffect } from "react";
 import { useAuth } from "@/hooks/use-auth";
-import ProtectedRoute from "@/components/protected-route";
+import { ProtectedRoute } from "@/components/protected-route";
 
 export default function EditProduct() {
   const { id } = useParams();
