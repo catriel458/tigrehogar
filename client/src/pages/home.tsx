@@ -21,7 +21,7 @@ export default function Home() {
             Bienvenidos a Casa Comfort
           </h1>
           <p className="text-center text-lg mb-12 text-muted-foreground">
-            Tu tienda de confianza en Zona Norte para artículos del hogar y más
+            Tu tienda de confianza en Zona Norte para artículos del hogar, vestimenta y mucho más
           </p>
 
           <h2 className="text-3xl font-serif text-center mb-8">
