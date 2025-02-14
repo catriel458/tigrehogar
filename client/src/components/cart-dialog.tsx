@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { ShoppingCart, Plus, Minus } from 'lucide-react';
 import { Button } from "@/components/ui/button";
@@ -15,7 +14,7 @@ import {
 } from "@/components/ui/sheet";
 
 export function CartDialog() {
-  const { items, total, removeItem, clearCart, addItem } = useCart();
+  const { items, total, removeItem, clearCart, addItem, decrementItem } = useCart();
   const { toast } = useToast();
 
   const [checkoutData, setCheckoutData] = useState({
@@ -89,8 +88,7 @@ Me gustaría coordinar la entrega y el método de pago (efectivo o Mercado Pago)
                         <Button
                           variant="outline"
                           size="icon"
-                          onClick={() => removeItem(item.id)}
-                          disabled={item.quantity <= 1}
+                          onClick={() => decrementItem(item.id)}
                         >
                           <Minus className="h-4 w-4" />
                         </Button>
@@ -105,11 +103,7 @@ Me gustaría coordinar la entrega y el método de pago (efectivo o Mercado Pago)
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={() => {
-                            for(let i = 0; i < item.quantity; i++) {
-                              removeItem(item.id);
-                            }
-                          }}
+                          onClick={() => removeItem(item.id)}
                           className="ml-2"
                         >
                           Eliminar
