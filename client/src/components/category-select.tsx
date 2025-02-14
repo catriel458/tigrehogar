@@ -40,13 +40,15 @@ export function CategorySelect({ value, onValueChange }: CategorySelectProps) {
     queryFn: async () => {
       const response = await apiRequest<Category[]>("GET", "/api/categories");
       return response || [];
-    },
+    }
   });
 
   const createCategoryMutation = useMutation({
     mutationFn: async (name: string) => {
       const normalizedName = normalizeCategory(name);
-      if (categories.some(cat => cat.name.toLowerCase() === normalizedName.toLowerCase())) {
+      const existingCategories = Array.isArray(categories) ? categories : [];
+
+      if (existingCategories.some(cat => cat.name.toLowerCase() === normalizedName.toLowerCase())) {
         throw new Error("Esta categoría ya existe");
       }
       await apiRequest("POST", "/api/categories", { name: normalizedName });
