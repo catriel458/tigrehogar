@@ -47,16 +47,11 @@ export function registerRoutes(app: Express) {
         return res.status(403).json({ error: "Solo los administradores pueden agregar productos" });
       }
 
-      let imageUrl;
-      if (req.file) {
-        // Si se subió un archivo, usar la ruta del archivo
-        imageUrl = `/uploads/${req.file.filename}`;
-      } else if (req.body.image) {
-        // Si se proporcionó una URL, usarla directamente
-        imageUrl = req.body.image;
-      } else {
+      if (!req.file) {
         return res.status(400).json({ error: "Se requiere una imagen" });
       }
+
+      const imageUrl = `/uploads/${req.file.filename}`;
 
       const productData = {
         name: req.body.name,
@@ -68,6 +63,8 @@ export function registerRoutes(app: Express) {
 
       const result = insertProductSchema.safeParse(productData);
       if (!result.success) {
+        // Si hay un error, eliminar la imagen subida
+        await fs.unlink(`./uploads/${req.file.filename}`).catch(() => {});
         return res.status(400).json({ error: result.error.message });
       }
 

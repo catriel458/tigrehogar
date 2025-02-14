@@ -11,20 +11,19 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-  FormDescription,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { queryClient, apiRequest } from "@/lib/queryClient";
+import { queryClient } from "@/lib/queryClient";
 import { insertProductSchema, type InsertProduct } from "@shared/schema";
 import Header from "@/components/layout/header";
 import Footer from "@/components/layout/footer";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export default function AddProduct() {
   const [, navigate] = useLocation();
   const { toast } = useToast();
+
   const form = useForm<InsertProduct>({
     resolver: zodResolver(insertProductSchema),
     defaultValues: {
@@ -39,23 +38,29 @@ export default function AddProduct() {
   const mutation = useMutation({
     mutationFn: async (data: InsertProduct) => {
       const formData = new FormData();
+
+      // Agregar todos los campos al FormData
       formData.append("name", data.name);
       formData.append("description", data.description);
       formData.append("price", String(data.price));
       formData.append("category", data.category);
 
+      // Manejar el archivo de imagen
       if (data.image instanceof File) {
         formData.append("image", data.image);
-      } else {
-        formData.append("image", data.image as string);
       }
 
-      return apiRequest(
-        "POST",
-        "/api/products",
-        formData,
-        {}
-      );
+      const response = await fetch("/api/products", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || "Error al crear el producto");
+      }
+
+      return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/products"] });
@@ -137,61 +142,28 @@ export default function AddProduct() {
                   )}
                 />
 
-                <Tabs defaultValue="url" className="w-full">
-                  <TabsList className="grid w-full grid-cols-2">
-                    <TabsTrigger value="url">URL de Imagen</TabsTrigger>
-                    <TabsTrigger value="file">Subir Imagen</TabsTrigger>
-                  </TabsList>
-                  <TabsContent value="url">
-                    <FormField
-                      control={form.control}
-                      name="image"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>URL de la Imagen</FormLabel>
-                          <FormControl>
-                            <Input 
-                              type="url" 
-                              onChange={(e) => field.onChange(e.target.value)}
-                              value={typeof field.value === 'string' ? field.value : ''}
-                            />
-                          </FormControl>
-                          <FormDescription>
-                            Ingresa la URL de la imagen del producto
-                          </FormDescription>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </TabsContent>
-                  <TabsContent value="file">
-                    <FormField
-                      control={form.control}
-                      name="image"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Subir Imagen</FormLabel>
-                          <FormControl>
-                            <Input
-                              type="file"
-                              accept="image/*"
-                              onChange={(e) => {
-                                const file = e.target.files?.[0];
-                                if (file) {
-                                  field.onChange(file);
-                                }
-                              }}
-                            />
-                          </FormControl>
-                          <FormDescription>
-                            Selecciona una imagen de tu ordenador
-                          </FormDescription>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </TabsContent>
-                </Tabs>
+                <FormField
+                  control={form.control}
+                  name="image"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Imagen del Producto</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="file"
+                          accept="image/*"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (file) {
+                              field.onChange(file);
+                            }
+                          }}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
                 <FormField
                   control={form.control}
