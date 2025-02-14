@@ -19,7 +19,6 @@ import { queryClient, apiRequest } from "@/lib/queryClient";
 import { insertProductSchema, type InsertProduct } from "@shared/schema";
 import Header from "@/components/layout/header";
 import Footer from "@/components/layout/footer";
-import { CategorySelect } from "@/components/category-select";
 import { ProtectedRoute } from "@/components/protected-route";
 
 export default function AddProduct() {
@@ -139,10 +138,7 @@ export default function AddProduct() {
                       <FormItem>
                         <FormLabel>Categoría</FormLabel>
                         <FormControl>
-                          <CategorySelect
-                            value={field.value}
-                            onValueChange={field.onChange}
-                          />
+                          <Input {...field} placeholder="Ingrese la categoría" />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
