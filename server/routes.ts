@@ -53,6 +53,11 @@ export function registerRoutes(app: Express) {
       return res.status(401).json({ error: "No autenticado" });
     }
 
+    const user = await storage.getUserById(req.session.userId);
+    if (!user?.isAdmin) {
+      return res.status(403).json({ error: "Solo los administradores pueden eliminar productos" });
+    }
+
     const id = parseInt(req.params.id);
     const success = await storage.deleteProduct(id);
     if (!success) {
