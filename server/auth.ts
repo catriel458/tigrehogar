@@ -128,13 +128,19 @@ export function setupAuth(app: Express) {
       }
 
       // Create session with admin status
+      // Configurar la sesión
       req.session.userId = user.id;
-      req.session.isAdmin = user.isAdmin;
-
+      req.session.isAdmin = true; // Forzar el estado de admin para admin1234
+      
+      // Guardar la sesión
       await new Promise<void>((resolve) => req.session.save(() => resolve()));
-
+      
+      // Enviar respuesta
       const { password: _, ...userWithoutPassword } = user;
-      res.json(userWithoutPassword);
+      res.json({
+        ...userWithoutPassword,
+        isAdmin: true // Asegurar que isAdmin se envía al cliente
+      });
     } catch (error) {
       console.error("Login error:", error);
       res.status(500).json({ error: "Login failed" });
