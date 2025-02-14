@@ -18,7 +18,7 @@ import type { Product } from "@shared/schema";
 const ITEMS_PER_PAGE = 6;
 
 export default function Home() {
-  const { data: products, isLoading } = useQuery<Product[]>({
+  const { data: products = [], isLoading } = useQuery<Product[]>({
     queryKey: ["/api/products"],
   });
 
@@ -31,14 +31,14 @@ export default function Home() {
     priceRange: [0, 1000000],
   });
 
-  const filteredProducts = products?.filter((product) => {
+  const filteredProducts = products.filter((product) => {
     const matchesCategory = !filters.category || product.category === filters.category;
     const matchesPrice = 
       product.price >= filters.priceRange[0] && 
       product.price <= filters.priceRange[1];
 
     return matchesCategory && matchesPrice;
-  }) || [];
+  });
 
   const totalPages = Math.max(1, Math.ceil(filteredProducts.length / ITEMS_PER_PAGE));
   const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
