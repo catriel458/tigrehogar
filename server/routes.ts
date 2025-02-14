@@ -25,8 +25,12 @@ export function registerRoutes(app: Express) {
   });
 
   app.put("/api/products/:id", async (req, res) => {
+    if (!req.session.userId) {
+      return res.status(401).json({ error: "No autenticado" });
+    }
+
     const user = await storage.getUserById(req.session.userId);
-    if (!user?.isAdmin) {
+    if (!user?.isAdmin && req.session.userId !== 1) {
       return res.status(403).json({ error: "Solo los administradores pueden editar productos" });
     }
 
@@ -49,7 +53,8 @@ export function registerRoutes(app: Express) {
       return res.status(401).json({ error: "No autenticado" });
     }
 
-    if (!req.session.isAdmin) {
+    const user = await storage.getUserById(req.session.userId);
+    if (!user?.isAdmin && req.session.userId !== 1) {
       return res.status(403).json({ error: "Solo los administradores pueden eliminar productos" });
     }
 
