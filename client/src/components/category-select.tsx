@@ -73,15 +73,15 @@ export function CategorySelect({ value, onValueChange }: CategorySelectProps) {
     }
   };
 
-  if (isLoading) {
-    return <SelectTrigger>Cargando categorías...</SelectTrigger>;
-  }
-
   return (
     <div className="space-y-2">
       <Select value={value} onValueChange={onValueChange}>
         <SelectTrigger>
-          <SelectValue placeholder="Seleccionar categoría" />
+          {isLoading ? (
+            <span>Cargando categorías...</span>
+          ) : (
+            <SelectValue placeholder="Seleccionar categoría" />
+          )}
         </SelectTrigger>
         <SelectContent>
           {categories.map((category) => (
