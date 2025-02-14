@@ -1,3 +1,4 @@
+
 import { SiInstagram, SiFacebook, SiPinterest, SiX } from "react-icons/si";
 
 export default function Footer() {
@@ -7,7 +8,7 @@ export default function Footer() {
         <div className="flex flex-col items-center space-y-4">
           <h2 className="font-serif text-2xl">Casa Comfort</h2>
           <p className="text-muted-foreground text-center">
-            Making your house feel like home, one comfort at a time
+            Haciendo de tu casa un hogar, con todo el confort que necesitas
           </p>
 
           <div className="flex space-x-6">
@@ -26,7 +27,7 @@ export default function Footer() {
           </div>
 
           <p className="text-sm text-muted-foreground">
-            © {new Date().getFullYear()} Casa Comfort. All rights reserved.
+            © {new Date().getFullYear()} Casa Comfort. Todos los derechos reservados.
           </p>
         </div>
       </div>

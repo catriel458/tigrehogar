@@ -53,6 +53,9 @@ export default function AboutSection() {
             alt="Municipio de Tigre"
             className="w-full max-h-[400px] object-cover rounded-lg"
           />
+          <p className="text-center mt-4 italic text-muted-foreground">
+            Orgullosamente Tigrenses
+          </p>
         </div>
       </div>
     </section>
