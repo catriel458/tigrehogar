@@ -38,11 +38,30 @@ async function sendVerificationEmail(email: string, token: string) {
   });
 }
 
+async function sendPasswordResetEmail(email: string, token: string) {
+  const resetUrl = `${process.env.APP_URL}/reset-password?token=${token}`;
+
+  await transporter.sendMail({
+    from: process.env.EMAIL_USER,
+    to: email,
+    subject: "Reset your password",
+    html: `
+      <h1>Password Reset Request</h1>
+      <p>Click the link below to reset your password:</p>
+      <a href="${resetUrl}">${resetUrl}</a>
+      <p>This link will expire in 1 hour.</p>
+    `,
+  });
+}
+
 export function setupAuth(app: Express) {
   app.post("/api/register", async (req, res) => {
     try {
+      console.log("Register request body:", req.body);
+
       const result = insertUserSchema.safeParse(req.body);
       if (!result.success) {
+        console.log("Validation error:", result.error);
         return res.status(400).json({ error: "Invalid user data" });
       }
 
@@ -71,8 +90,7 @@ export function setupAuth(app: Express) {
         await sendVerificationEmail(email, user.verificationToken);
       }
 
-      // Important: Devolver siempre una respuesta JSON
-      res.status(201).json({ 
+      const responseData = {
         message: "Registration successful. Please check your email to verify your account.",
         user: {
           id: user.id,
@@ -81,7 +99,10 @@ export function setupAuth(app: Express) {
           emailVerified: user.emailVerified,
           isAdmin: user.isAdmin
         }
-      });
+      };
+
+      console.log("Sending response:", responseData);
+      res.status(201).json(responseData);
     } catch (error) {
       console.error("Registration error:", error);
       res.status(500).json({ error: "Registration failed" });

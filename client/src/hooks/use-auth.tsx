@@ -39,7 +39,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const loginMutation = useMutation({
     mutationFn: async (data: LoginData) => {
       const res = await apiRequest("POST", "/api/login", data);
-      return res.json();
+      const jsonData = await res.json();
+      console.log("Login response:", jsonData);
+      return jsonData;
     },
     onSuccess: (user) => {
       queryClient.setQueryData(["/api/me"], user);
@@ -49,6 +51,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       });
     },
     onError: (error: Error) => {
+      console.error("Login error:", error);
       toast({
         title: "Error al iniciar sesión",
         description: error.message,
@@ -59,9 +62,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const registerMutation = useMutation({
     mutationFn: async (data: InsertUser) => {
-      const res = await apiRequest("POST", "/api/register", data);
-      const jsonData = await res.json();
-      return jsonData.user;
+      try {
+        console.log("Register data:", data);
+        const res = await apiRequest("POST", "/api/register", data);
+        const jsonData = await res.json();
+        console.log("Register response:", jsonData);
+        if (!jsonData.user) {
+          throw new Error(jsonData.error || "Error en el registro");
+        }
+        return jsonData.user;
+      } catch (error) {
+        console.error("Register error:", error);
+        throw error;
+      }
     },
     onSuccess: () => {
       toast({
@@ -70,6 +83,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       });
     },
     onError: (error: Error) => {
+      console.error("Register mutation error:", error);
       toast({
         title: "Error al registrarse",
         description: error.message,
