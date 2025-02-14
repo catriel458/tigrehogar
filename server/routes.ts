@@ -47,14 +47,20 @@ export function registerRoutes(app: Express) {
         return res.status(403).json({ error: "Solo los administradores pueden agregar productos" });
       }
 
+      console.log('Cuerpo de la solicitud:', req.body);
+      console.log('Archivo recibido:', req.file);
+
       let imageUrl;
       if (req.file) {
         // Si se subió un archivo, usar la ruta del archivo
         imageUrl = `/uploads/${req.file.filename}`;
+        console.log('Usando archivo subido:', imageUrl);
       } else if (req.body.imageUrl || req.body.image) {
         // Si se proporcionó una URL, usarla directamente
         imageUrl = req.body.imageUrl || req.body.image;
+        console.log('Usando URL de imagen:', imageUrl);
       } else {
+        console.log('No se encontró imagen:', { body: req.body, file: req.file });
         return res.status(400).json({ error: "Se requiere una imagen" });
       }
 
@@ -66,8 +72,11 @@ export function registerRoutes(app: Express) {
         image: imageUrl
       };
 
+      console.log('Datos del producto a validar:', productData);
+
       const result = insertProductSchema.safeParse(productData);
       if (!result.success) {
+        console.log('Error de validación:', result.error);
         return res.status(400).json({ error: result.error.message });
       }
 

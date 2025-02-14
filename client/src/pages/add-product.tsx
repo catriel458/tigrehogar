@@ -49,15 +49,11 @@ export default function AddProduct() {
         }
       });
 
-      const headers = {
-        ...(!(data.image instanceof File) && {
-          "Content-Type": "application/json"
-        })
-      };
-
-      return apiRequest("POST", "/api/products", 
+      return apiRequest(
+        "POST",
+        "/api/products",
         data.image instanceof File ? formData : data,
-        headers
+        data.image instanceof File ? {} : { "Content-Type": "application/json" }
       );
     },
     onSuccess: () => {
