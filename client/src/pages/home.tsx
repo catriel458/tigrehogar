@@ -38,13 +38,11 @@ export default function Home() {
       product.price <= filters.priceRange[1];
 
     return matchesCategory && matchesPrice;
-  });
+  }) || [];
 
-  const totalPages = filteredProducts ? Math.ceil(filteredProducts.length / ITEMS_PER_PAGE) : 0;
-  const paginatedProducts = filteredProducts?.slice(
-    (currentPage - 1) * ITEMS_PER_PAGE,
-    currentPage * ITEMS_PER_PAGE
-  );
+  const totalPages = Math.max(1, Math.ceil(filteredProducts.length / ITEMS_PER_PAGE));
+  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+  const paginatedProducts = filteredProducts.slice(startIndex, startIndex + ITEMS_PER_PAGE);
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -66,7 +64,7 @@ export default function Home() {
                   products={products}
                   onFilterChange={(newFilters) => {
                     setFilters(newFilters);
-                    setCurrentPage(1); // Reset to first page when filters change
+                    setCurrentPage(1);
                   }}
                 />
               )}
@@ -83,7 +81,7 @@ export default function Home() {
                     <div key={i} className="h-[300px] bg-muted animate-pulse rounded-lg" />
                   ))
                 ) : (
-                  paginatedProducts?.map((product) => (
+                  paginatedProducts.map((product) => (
                     <ProductCard key={product.id} product={product} />
                   ))
                 )}
