@@ -80,6 +80,10 @@ export default function Home() {
                   Array(ITEMS_PER_PAGE).fill(0).map((_, i) => (
                     <div key={i} className="h-[300px] bg-muted animate-pulse rounded-lg" />
                   ))
+                ) : filteredProducts.length === 0 ? (
+                  <div className="col-span-full text-center text-muted-foreground">
+                    No se encontraron productos que coincidan con los filtros seleccionados.
+                  </div>
                 ) : (
                   paginatedProducts.map((product) => (
                     <ProductCard key={product.id} product={product} />
