@@ -47,19 +47,14 @@ export default function AddProduct() {
       if (data.image instanceof File) {
         formData.append("image", data.image);
       } else {
-        formData.append("imageUrl", data.image as string);
-      }
-
-      console.log("FormData entries:");
-      for (let [key, value] of formData.entries()) {
-        console.log(`${key}: ${value instanceof File ? value.name : value}`);
+        formData.append("image", data.image as string);
       }
 
       return apiRequest(
         "POST",
         "/api/products",
-        data.image instanceof File ? formData : data,
-        data.image instanceof File ? {} : { "Content-Type": "application/json" }
+        formData,
+        {}
       );
     },
     onSuccess: () => {
@@ -183,7 +178,6 @@ export default function AddProduct() {
                               onChange={(e) => {
                                 const file = e.target.files?.[0];
                                 if (file) {
-                                  console.log("Selected file:", file.name);
                                   field.onChange(file);
                                 }
                               }}
