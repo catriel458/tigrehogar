@@ -1,3 +1,4 @@
+
 import {
   Card,
   CardContent,
@@ -22,9 +23,7 @@ interface ProductCardProps {
 export default function ProductCard({ product, onEdit }: ProductCardProps) {
   const { user } = useAuth();
   const { toast } = useToast();
-  const isAdmin = user?.isAdmin || user?.username === 'admin1234';
-
-  console.log("User admin status:", isAdmin, "User:", user);
+  const isAdmin = user?.isAdmin;
 
   const formattedPrice = new Intl.NumberFormat('es-AR', {
     style: 'currency',
