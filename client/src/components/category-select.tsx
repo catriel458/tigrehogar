@@ -35,7 +35,7 @@ export function CategorySelect({ value, onValueChange }: CategorySelectProps) {
   const [newCategory, setNewCategory] = useState("");
   const { toast } = useToast();
 
-  const { data: categories = [], isLoading } = useQuery({
+  const { data: categories = [], isLoading } = useQuery<Category[]>({
     queryKey: ["/api/categories"],
   });
 
@@ -43,12 +43,11 @@ export function CategorySelect({ value, onValueChange }: CategorySelectProps) {
     mutationFn: async (name: string) => {
       const normalizedName = normalizeCategory(name);
 
-      // Verificar si la categoría ya existe (ignorando mayúsculas/minúsculas)
-      const exists = categories.some(
+      const categoryExists = categories.some(
         cat => cat.name.toLowerCase() === normalizedName.toLowerCase()
       );
 
-      if (exists) {
+      if (categoryExists) {
         throw new Error("Esta categoría ya existe");
       }
 
@@ -57,20 +56,15 @@ export function CategorySelect({ value, onValueChange }: CategorySelectProps) {
       });
     },
     onSuccess: async () => {
-      console.log("Category created successfully");
       setNewCategory("");
       setIsOpen(false);
-
-      // Actualizar la lista de categorías
       await queryClient.invalidateQueries({ queryKey: ["/api/categories"] });
-
       toast({
         title: "Categoría creada",
         description: "La categoría ha sido creada exitosamente.",
       });
     },
     onError: (error: Error) => {
-      console.error("Error creating category:", error);
       toast({
         title: "Error al crear la categoría",
         description: error.message,
@@ -93,7 +87,7 @@ export function CategorySelect({ value, onValueChange }: CategorySelectProps) {
   };
 
   // Ordenar categorías alfabéticamente
-  const sortedCategories = [...categories].sort((a, b) => 
+  const sortedCategories = [...(categories || [])].sort((a, b) => 
     a.name.localeCompare(b.name)
   );
 
@@ -116,7 +110,12 @@ export function CategorySelect({ value, onValueChange }: CategorySelectProps) {
                   }
                 }}
               />
-              <Label htmlFor={`category-${category.id}`}>{category.name}</Label>
+              <Label
+                htmlFor={`category-${category.id}`}
+                className="cursor-pointer"
+              >
+                {category.name}
+              </Label>
             </div>
           ))}
         </div>

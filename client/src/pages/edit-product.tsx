@@ -15,20 +15,18 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { queryClient, apiRequest } from "@/lib/queryClient";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 import { insertProductSchema, type InsertProduct, type Product } from "@shared/schema";
 import Header from "@/components/layout/header";
 import Footer from "@/components/layout/footer";
 import { CategorySelect } from "@/components/category-select";
 import { useEffect } from "react";
-import { useAuth } from "@/hooks/use-auth";
 import { ProtectedRoute } from "@/components/protected-route";
 
 export default function EditProduct() {
   const { id } = useParams();
   const [, navigate] = useLocation();
   const { toast } = useToast();
-  const { user } = useAuth();
 
   const form = useForm<InsertProduct>({
     resolver: zodResolver(insertProductSchema),
@@ -41,19 +39,18 @@ export default function EditProduct() {
     }
   });
 
-  const { data: product, isLoading } = useQuery({
+  const { data: product, isLoading } = useQuery<Product>({
     queryKey: ["/api/products", id],
     queryFn: async () => {
       if (!id) throw new Error("No product ID provided");
-      const response = await apiRequest("GET", `/api/products/${id}`);
-      return response as Product;
+      const response = await apiRequest<Product>("GET", `/api/products/${id}`);
+      return response;
     },
     enabled: !!id,
   });
 
   useEffect(() => {
     if (product) {
-      console.log("Setting form values with product:", product);
       form.reset({
         name: product.name,
         description: product.description,
@@ -67,9 +64,8 @@ export default function EditProduct() {
   const mutation = useMutation({
     mutationFn: async (data: InsertProduct) => {
       if (!id) throw new Error("Product ID is required");
-      console.log("Sending update request with data:", data);
-      const response = await apiRequest("PUT", `/api/products/${id}`, data);
-      return response as Product;
+      const response = await apiRequest<Product>("PUT", `/api/products/${id}`, data);
+      return response;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/products"] });
@@ -80,7 +76,6 @@ export default function EditProduct() {
       navigate("/");
     },
     onError: (error: Error) => {
-      console.error("Error updating product:", error);
       toast({
         title: "Error al actualizar",
         description: error.message,
@@ -90,7 +85,7 @@ export default function EditProduct() {
   });
 
   return (
-    <ProtectedRoute adminOnly>
+    <ProtectedRoute>
       <div className="min-h-screen flex flex-col">
         <Header />
         <main className="flex-1 container mx-auto px-4 py-8">
@@ -119,10 +114,7 @@ export default function EditProduct() {
               <CardContent>
                 <Form {...form}>
                   <form
-                    onSubmit={form.handleSubmit((data) => {
-                      console.log("Form submitted with data:", data);
-                      mutation.mutate(data);
-                    })}
+                    onSubmit={form.handleSubmit((data) => mutation.mutate(data))}
                     className="space-y-4"
                   >
                     <FormField
