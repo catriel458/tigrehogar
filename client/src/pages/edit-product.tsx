@@ -29,39 +29,31 @@ export default function EditProduct() {
 
   const form = useForm<InsertProduct>({
     resolver: zodResolver(insertProductSchema),
-    defaultValues: {
-      name: "",
-      description: "",
-      price: 0,
-      image: "",
-      category: "",
-    },
   });
 
-  const { data, isLoading } = useQuery({
+  const { data: product, isLoading } = useQuery<Product>({
     queryKey: ["/api/products", id],
-    enabled: !!id,
     queryFn: async () => {
-      const response = await apiRequest<Product>("GET", `/api/products/${id}`);
-      return response;
+      return await apiRequest("GET", `/api/products/${id}`);
     },
+    enabled: !!id,
   });
 
   useEffect(() => {
-    if (data) {
+    if (product) {
       form.reset({
-        name: data.name,
-        description: data.description,
-        price: data.price,
-        image: data.image,
-        category: data.category,
+        name: product.name,
+        description: product.description,
+        price: product.price,
+        image: product.image,
+        category: product.category,
       });
     }
-  }, [data, form]);
+  }, [product, form]);
 
   const mutation = useMutation({
     mutationFn: async (data: InsertProduct) => {
-      return await apiRequest<Product>("PUT", `/api/products/${id}`, data);
+      return await apiRequest("PUT", `/api/products/${id}`, data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/products"] });
@@ -95,7 +87,7 @@ export default function EditProduct() {
     );
   }
 
-  if (!data) {
+  if (!product) {
     return (
       <div className="min-h-screen flex flex-col">
         <Header />

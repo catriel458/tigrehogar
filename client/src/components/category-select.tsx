@@ -25,25 +25,48 @@ interface CategorySelectProps {
   onValueChange: (value: string) => void;
 }
 
+// Función para normalizar el nombre de la categoría
+const normalizeCategory = (name: string): string => {
+  return name
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, ' ')
+    .split(' ')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
+};
+
 export function CategorySelect({ value, onValueChange }: CategorySelectProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [newCategory, setNewCategory] = useState("");
   const { toast } = useToast();
 
-  const { data: categories = [], isLoading } = useQuery({
+  const { data: categories = [], isLoading } = useQuery<Category[]>({
     queryKey: ["/api/categories"],
   });
 
   const createCategoryMutation = useMutation({
     mutationFn: async (name: string) => {
-      const response = await apiRequest<Category>("POST", "/api/categories", { name });
-      return response;
+      const normalizedName = normalizeCategory(name);
+
+      // Verificar si la categoría ya existe (ignorando mayúsculas/minúsculas)
+      const exists = categories.some(
+        cat => cat.name.toLowerCase() === normalizedName.toLowerCase()
+      );
+
+      if (exists) {
+        throw new Error("Esta categoría ya existe");
+      }
+
+      return await apiRequest<Category>("POST", "/api/categories", { 
+        name: normalizedName 
+      });
     },
     onSuccess: (newCategory) => {
       setNewCategory("");
       setIsOpen(false);
 
-      // Invalidar la caché y forzar una recarga
+      // Actualizar la lista de categorías
       queryClient.invalidateQueries({ queryKey: ["/api/categories"] });
 
       toast({
@@ -51,8 +74,8 @@ export function CategorySelect({ value, onValueChange }: CategorySelectProps) {
         description: "La categoría ha sido creada exitosamente.",
       });
 
-      // Seleccionar la nueva categoría si existe
-      if (newCategory && newCategory.name) {
+      // Seleccionar la nueva categoría
+      if (newCategory?.name) {
         onValueChange(newCategory.name);
       }
     },
@@ -66,10 +89,22 @@ export function CategorySelect({ value, onValueChange }: CategorySelectProps) {
   });
 
   const handleCreateCategory = () => {
-    if (newCategory.trim()) {
-      createCategoryMutation.mutate(newCategory.trim());
+    if (!newCategory.trim()) {
+      toast({
+        title: "Error",
+        description: "El nombre de la categoría no puede estar vacío",
+        variant: "destructive",
+      });
+      return;
     }
+
+    createCategoryMutation.mutate(newCategory);
   };
+
+  // Ordenar categorías alfabéticamente
+  const sortedCategories = [...(categories || [])].sort((a, b) => 
+    a.name.localeCompare(b.name)
+  );
 
   return (
     <div className="space-y-2">
@@ -82,7 +117,7 @@ export function CategorySelect({ value, onValueChange }: CategorySelectProps) {
           )}
         </SelectTrigger>
         <SelectContent>
-          {categories.map((category: Category) => (
+          {sortedCategories.map((category: Category) => (
             <SelectItem key={category.id} value={category.name}>
               {category.name}
             </SelectItem>
