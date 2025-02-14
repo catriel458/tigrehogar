@@ -25,7 +25,7 @@ async function comparePasswords(password: string, hashedPassword: string): Promi
 
 async function sendVerificationEmail(email: string, token: string) {
   const verificationUrl = `${process.env.APP_URL}/verify-email?token=${token}`;
-  
+
   await transporter.sendMail({
     from: process.env.EMAIL_USER,
     to: email,
@@ -34,22 +34,6 @@ async function sendVerificationEmail(email: string, token: string) {
       <h1>Welcome to Casa Comfort!</h1>
       <p>Please click the link below to verify your email address:</p>
       <a href="${verificationUrl}">${verificationUrl}</a>
-    `,
-  });
-}
-
-async function sendPasswordResetEmail(email: string, token: string) {
-  const resetUrl = `${process.env.APP_URL}/reset-password?token=${token}`;
-  
-  await transporter.sendMail({
-    from: process.env.EMAIL_USER,
-    to: email,
-    subject: "Reset your password",
-    html: `
-      <h1>Password Reset Request</h1>
-      <p>Click the link below to reset your password:</p>
-      <a href="${resetUrl}">${resetUrl}</a>
-      <p>This link will expire in 1 hour.</p>
     `,
   });
 }
@@ -87,7 +71,17 @@ export function setupAuth(app: Express) {
         await sendVerificationEmail(email, user.verificationToken);
       }
 
-      res.status(201).json({ message: "Registration successful. Please check your email to verify your account." });
+      // Important: Devolver siempre una respuesta JSON
+      res.status(201).json({ 
+        message: "Registration successful. Please check your email to verify your account.",
+        user: {
+          id: user.id,
+          username: user.username,
+          email: user.email,
+          emailVerified: user.emailVerified,
+          isAdmin: user.isAdmin
+        }
+      });
     } catch (error) {
       console.error("Registration error:", error);
       res.status(500).json({ error: "Registration failed" });
@@ -114,7 +108,7 @@ export function setupAuth(app: Express) {
 
       // Create session
       req.session.userId = user.id;
-      
+
       const { password: _, ...userWithoutPassword } = user;
       res.json(userWithoutPassword);
     } catch (error) {
@@ -181,7 +175,7 @@ export function setupAuth(app: Express) {
 
       const hashedPassword = await hashPassword(password);
       const success = await storage.resetPassword(token, hashedPassword);
-      
+
       if (!success) {
         return res.status(400).json({ error: "Invalid or expired token" });
       }
