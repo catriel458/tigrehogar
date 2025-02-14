@@ -22,7 +22,9 @@ interface ProductCardProps {
 export default function ProductCard({ product, onEdit }: ProductCardProps) {
   const { user } = useAuth();
   const { toast } = useToast();
-  const isAdmin = user?.isAdmin === true;
+  const isAdmin = user?.isAdmin;
+
+  console.log("User admin status:", isAdmin);
 
   const formattedPrice = new Intl.NumberFormat('es-AR', {
     style: 'currency',

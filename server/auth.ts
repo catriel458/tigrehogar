@@ -131,6 +131,8 @@ export function setupAuth(app: Express) {
       req.session.userId = user.id;
       req.session.isAdmin = user.isAdmin;
 
+      await new Promise<void>((resolve) => req.session.save(() => resolve()));
+
       const { password: _, ...userWithoutPassword } = user;
       res.json(userWithoutPassword);
     } catch (error) {
