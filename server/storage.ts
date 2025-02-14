@@ -7,6 +7,8 @@ export interface IStorage {
   getProducts(): Promise<Product[]>;
   getProduct(id: number): Promise<Product | undefined>;
   createProduct(product: InsertProduct): Promise<Product>;
+  updateProduct(id: number, product: InsertProduct): Promise<Product | undefined>;
+  deleteProduct(id: number): Promise<boolean>;
 
   // User operations
   createUser(user: InsertUser): Promise<User>;
@@ -35,6 +37,23 @@ export class DatabaseStorage implements IStorage {
       .values(insertProduct)
       .returning();
     return product;
+  }
+
+  async updateProduct(id: number, updateProduct: InsertProduct): Promise<Product | undefined> {
+    const [product] = await db
+      .update(products)
+      .set(updateProduct)
+      .where(eq(products.id, id))
+      .returning();
+    return product;
+  }
+
+  async deleteProduct(id: number): Promise<boolean> {
+    const [product] = await db
+      .delete(products)
+      .where(eq(products.id, id))
+      .returning();
+    return !!product;
   }
 
   async createUser(insertUser: InsertUser): Promise<User> {
