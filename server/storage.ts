@@ -1,14 +1,19 @@
-import { products, users, type Product, type InsertProduct, type User, type InsertUser } from "@shared/schema";
+import { products, users, categories, type Product, type InsertProduct, type User, type InsertUser, type Category, type InsertCategory } from "@shared/schema";
 import { db } from "./db";
 import { eq } from "drizzle-orm";
 import { randomBytes } from "crypto";
 
 export interface IStorage {
+  // Product operations
   getProducts(): Promise<Product[]>;
   getProduct(id: number): Promise<Product | undefined>;
   createProduct(product: InsertProduct): Promise<Product>;
   updateProduct(id: number, product: InsertProduct): Promise<Product | undefined>;
   deleteProduct(id: number): Promise<boolean>;
+
+  // Category operations
+  getCategories(): Promise<Category[]>;
+  createCategory(category: InsertCategory): Promise<Category>;
 
   // User operations
   createUser(user: InsertUser): Promise<User>;
@@ -54,6 +59,18 @@ export class DatabaseStorage implements IStorage {
       .where(eq(products.id, id))
       .returning();
     return !!product;
+  }
+
+  async getCategories(): Promise<Category[]> {
+    return await db.select().from(categories);
+  }
+
+  async createCategory(insertCategory: InsertCategory): Promise<Category> {
+    const [category] = await db
+      .insert(categories)
+      .values(insertCategory)
+      .returning();
+    return category;
   }
 
   async createUser(insertUser: InsertUser): Promise<User> {

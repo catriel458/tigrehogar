@@ -30,12 +30,20 @@ export default function EditProduct() {
     queryKey: ["/api/products", id],
     queryFn: async () => {
       const response = await apiRequest("GET", `/api/products/${id}`);
+      if (!response) throw new Error("Producto no encontrado");
       return response;
     },
   });
 
   const form = useForm<InsertProduct>({
     resolver: zodResolver(insertProductSchema),
+    defaultValues: {
+      name: "",
+      description: "",
+      price: 0,
+      image: "",
+      category: "",
+    },
     values: product ? {
       name: product.name,
       description: product.description,
@@ -128,11 +136,11 @@ export default function EditProduct() {
                     <FormItem>
                       <FormLabel>Precio (en pesos)</FormLabel>
                       <FormControl>
-                        <Input 
-                          type="number" 
-                          {...field} 
+                        <Input
+                          type="number"
+                          {...field}
                           value={field.value / 100}
-                          onChange={e => field.onChange(Math.round(parseFloat(e.target.value) * 100))} 
+                          onChange={e => field.onChange(Math.round(parseFloat(e.target.value) * 100))}
                         />
                       </FormControl>
                       <FormMessage />
