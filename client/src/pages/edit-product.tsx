@@ -27,29 +27,30 @@ export default function EditProduct() {
   const [, navigate] = useLocation();
   const { toast } = useToast();
 
-  const form = useForm<InsertProduct>({
-    resolver: zodResolver(insertProductSchema),
-    defaultValues: {
-      name: "",
-      description: "",
-      price: 0,
-      image: "",
-      category: "",
-    },
-  });
-
   const { data: product, isLoading } = useQuery<Product>({
     queryKey: ["/api/products", id],
     queryFn: async () => {
-      const response = await apiRequest("GET", `/api/products/${id}`);
+      const response = await apiRequest<Product>("GET", `/api/products/${id}`);
       if (!response) throw new Error("Producto no encontrado");
       return response;
+    },
+  });
+
+  const form = useForm<InsertProduct>({
+    resolver: zodResolver(insertProductSchema),
+    defaultValues: {
+      name: product?.name || "",
+      description: product?.description || "",
+      price: product?.price || 0,
+      image: product?.image || "",
+      category: product?.category || "",
     },
   });
 
   // Actualizar el formulario cuando se carga el producto
   useEffect(() => {
     if (product) {
+      console.log("Actualizando formulario con:", product);
       form.reset({
         name: product.name,
         description: product.description,
@@ -90,6 +91,28 @@ export default function EditProduct() {
             <div className="h-8 bg-muted rounded w-1/4" />
             <div className="h-[400px] bg-muted rounded" />
           </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
+  if (!product) {
+    return (
+      <div className="min-h-screen flex flex-col">
+        <Header />
+        <main className="flex-1 container mx-auto px-4 py-8">
+          <Card className="max-w-2xl mx-auto">
+            <CardHeader>
+              <CardTitle>Error</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p>No se encontró el producto.</p>
+              <Button onClick={() => navigate("/")} className="mt-4">
+                Volver al inicio
+              </Button>
+            </CardContent>
+          </Card>
         </main>
         <Footer />
       </div>
