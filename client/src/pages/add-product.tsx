@@ -40,13 +40,25 @@ export default function AddProduct() {
     mutationFn: async (data: InsertProduct) => {
       const formData = new FormData();
       Object.entries(data).forEach(([key, value]) => {
-        if (value instanceof File) {
-          formData.append(key, value);
+        if (key === "image" && value instanceof File) {
+          formData.append("image", value);
+        } else if (key === "image" && typeof value === "string") {
+          formData.append("imageUrl", value);
         } else {
           formData.append(key, String(value));
         }
       });
-      await apiRequest("POST", "/api/products", formData);
+
+      const headers = {
+        ...(!(data.image instanceof File) && {
+          "Content-Type": "application/json"
+        })
+      };
+
+      return apiRequest("POST", "/api/products", 
+        data.image instanceof File ? formData : data,
+        headers
+      );
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/products"] });
@@ -55,6 +67,13 @@ export default function AddProduct() {
         description: "Tu producto ha sido agregado a la tienda.",
       });
       navigate("/");
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error al agregar producto",
+        description: error.message,
+        variant: "destructive",
+      });
     },
   });
 
@@ -130,7 +149,11 @@ export default function AddProduct() {
                         <FormItem>
                           <FormLabel>URL de la Imagen</FormLabel>
                           <FormControl>
-                            <Input type="url" {...field} />
+                            <Input 
+                              type="url" 
+                              onChange={(e) => field.onChange(e.target.value)}
+                              value={typeof field.value === 'string' ? field.value : ''}
+                            />
                           </FormControl>
                           <FormDescription>
                             Ingresa la URL de la imagen del producto
@@ -144,7 +167,7 @@ export default function AddProduct() {
                     <FormField
                       control={form.control}
                       name="image"
-                      render={({ field: { value, onChange, ...field } }) => (
+                      render={({ field: { onChange, value, ...field } }) => (
                         <FormItem>
                           <FormLabel>Subir Imagen</FormLabel>
                           <FormControl>

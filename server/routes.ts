@@ -51,22 +51,24 @@ export function registerRoutes(app: Express) {
       if (req.file) {
         // Si se subió un archivo, usar la ruta del archivo
         imageUrl = `/uploads/${req.file.filename}`;
-      } else if (req.body.image) {
+      } else if (req.body.imageUrl || req.body.image) {
         // Si se proporcionó una URL, usarla directamente
-        imageUrl = req.body.image;
+        imageUrl = req.body.imageUrl || req.body.image;
       } else {
         return res.status(400).json({ error: "Se requiere una imagen" });
       }
 
       const productData = {
-        ...req.body,
+        name: req.body.name,
+        description: req.body.description,
         price: parseInt(req.body.price),
+        category: req.body.category,
         image: imageUrl
       };
 
       const result = insertProductSchema.safeParse(productData);
       if (!result.success) {
-        return res.status(400).json({ error: "Datos de producto inválidos" });
+        return res.status(400).json({ error: result.error.message });
       }
 
       const product = await storage.createProduct(result.data);
@@ -84,7 +86,7 @@ export function registerRoutes(app: Express) {
       }
 
       const user = await storage.getUserById(req.session.userId);
-      if (!user?.isAdmin && req.session.userId !== 1) {
+      if (!user?.isAdmin) {
         return res.status(403).json({ error: "Solo los administradores pueden editar productos" });
       }
 
@@ -93,19 +95,21 @@ export function registerRoutes(app: Express) {
       let imageUrl;
       if (req.file) {
         imageUrl = `/uploads/${req.file.filename}`;
-      } else if (req.body.image) {
-        imageUrl = req.body.image;
+      } else if (req.body.imageUrl || req.body.image) {
+        imageUrl = req.body.imageUrl || req.body.image;
       }
 
       const productData = {
-        ...req.body,
+        name: req.body.name,
+        description: req.body.description,
         price: parseInt(req.body.price),
+        category: req.body.category,
         ...(imageUrl && { image: imageUrl })
       };
 
       const result = insertProductSchema.safeParse(productData);
       if (!result.success) {
-        return res.status(400).json({ error: "Datos de producto inválidos" });
+        return res.status(400).json({ error: result.error.message });
       }
 
       const product = await storage.updateProduct(id, result.data);
