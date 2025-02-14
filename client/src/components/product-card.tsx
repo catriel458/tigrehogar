@@ -74,7 +74,12 @@ export default function ProductCard({ product }: ProductCardProps) {
       </CardContent>
 
       <CardFooter className="flex justify-between items-center">
-        <p className="text-lg font-semibold">{formattedPrice}</p>
+        <div>
+          <p className="text-lg font-semibold">{formattedPrice}</p>
+          <Button onClick={() => useCart.getState().addItem(product)} variant="default" size="sm">
+            Agregar al carrito
+          </Button>
+        </div>
         {isAdmin && (
           <div className="flex gap-2">
             <Button

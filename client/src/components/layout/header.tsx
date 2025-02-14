@@ -1,6 +1,7 @@
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Home, PlusCircle, User } from "lucide-react";
+import { CartDialog } from "@/components/cart-dialog";
 import { useAuth } from "@/hooks/use-auth";
 import {
   DropdownMenu,
@@ -23,6 +24,7 @@ export default function Header() {
         </Link>
 
         <div className="flex items-center space-x-4">
+          <CartDialog />
           {user?.isAdmin && (
             <Link href="/add-product">
               <Button variant="ghost" className="gap-2">

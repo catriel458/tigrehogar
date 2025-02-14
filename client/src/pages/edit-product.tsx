@@ -33,7 +33,7 @@ export default function EditProduct() {
 
   const form = useForm<InsertProduct>({
     resolver: zodResolver(insertProductSchema),
-    defaultValues: {
+    values: {
       name: product?.name || "",
       description: product?.description || "",
       price: product?.price || 0,

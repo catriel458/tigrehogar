@@ -24,12 +24,12 @@ export const users = pgTable("users", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
-export const insertProductSchema = createInsertSchema(products).pick({
-  name: true,
-  description: true,
-  price: true,
-  image: true,
-  category: true,
+export const insertProductSchema = z.object({
+  name: z.string().min(3, "El nombre debe tener al menos 3 caracteres"),
+  description: z.string().min(10, "La descripción debe tener al menos 10 caracteres"),
+  price: z.number().positive("El precio debe ser positivo").min(1, "El precio debe ser mayor a 0"),
+  image: z.string().url("Debe ser una URL válida"),
+  category: z.string().min(2, "La categoría debe tener al menos 2 caracteres"),
 });
 
 export const insertUserSchema = createInsertSchema(users)
