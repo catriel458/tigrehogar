@@ -22,6 +22,7 @@ interface ProductCardProps {
 export default function ProductCard({ product, onEdit }: ProductCardProps) {
   const { user } = useAuth();
   const { toast } = useToast();
+  const isAdmin = user?.isAdmin === true;
 
   const formattedPrice = new Intl.NumberFormat('es-AR', {
     style: 'currency',
@@ -71,7 +72,7 @@ export default function ProductCard({ product, onEdit }: ProductCardProps) {
 
       <CardFooter className="flex justify-between items-center">
         <p className="text-lg font-semibold">{formattedPrice}</p>
-        {user?.isAdmin && (
+        {isAdmin && (
           <div className="flex gap-2">
             <Button
               variant="outline"

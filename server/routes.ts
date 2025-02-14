@@ -11,7 +11,7 @@ export function registerRoutes(app: Express) {
   });
 
   app.post("/api/products", async (req, res) => {
-    if (!req.user?.isAdmin) {
+    if (!req.session.isAdmin) {
       return res.status(403).json({ error: "Solo los administradores pueden agregar productos" });
     }
 
@@ -25,7 +25,7 @@ export function registerRoutes(app: Express) {
   });
 
   app.put("/api/products/:id", async (req, res) => {
-    if (!req.user?.isAdmin) {
+    if (!req.session.isAdmin) {
       return res.status(403).json({ error: "Solo los administradores pueden editar productos" });
     }
 
@@ -44,7 +44,7 @@ export function registerRoutes(app: Express) {
   });
 
   app.delete("/api/products/:id", async (req, res) => {
-    if (!req.user?.isAdmin) {
+    if (!req.session.isAdmin) {
       return res.status(403).json({ error: "Solo los administradores pueden eliminar productos" });
     }
 

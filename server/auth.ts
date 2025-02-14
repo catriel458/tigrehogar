@@ -127,8 +127,9 @@ export function setupAuth(app: Express) {
         return res.status(401).json({ error: "Invalid credentials" });
       }
 
-      // Create session
+      // Create session with admin status
       req.session.userId = user.id;
+      req.session.isAdmin = user.isAdmin;
 
       const { password: _, ...userWithoutPassword } = user;
       res.json(userWithoutPassword);
