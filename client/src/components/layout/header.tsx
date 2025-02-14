@@ -1,7 +1,7 @@
 import { Link } from "wouter";
 import { useCart } from "@/hooks/use-cart";
 import { Button } from "@/components/ui/button";
-import { Home, PlusCircle, User } from "lucide-react";
+import { Home, Moon, PlusCircle, Sun, User } from "lucide-react";
 import { CartDialog } from "@/components/cart-dialog";
 import { useAuth } from "@/hooks/use-auth";
 import {
@@ -10,10 +10,12 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useTheme } from "@/hooks/use-theme";
 
 export default function Header() {
   const { user, logoutMutation } = useAuth();
   const { items } = useCart();
+  const { theme, setTheme } = useTheme();
 
   return (
     <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -26,6 +28,19 @@ export default function Header() {
         </Link>
 
         <div className="flex items-center space-x-4">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setTheme(theme === "light" ? "dark" : "light")}
+          >
+            {theme === "light" ? (
+              <Moon className="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
+            ) : (
+              <Sun className="h-[1.2rem] w-[1.2rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
+            )}
+            <span className="sr-only">Alternar tema</span>
+          </Button>
+
           <div className="relative">
             <CartDialog />
             {items.length > 0 && (
@@ -52,9 +67,13 @@ export default function Header() {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuItem>Mi Perfil</DropdownMenuItem>
+                <Link href="/profile">
+                  <DropdownMenuItem className="cursor-pointer">
+                    Mi Perfil
+                  </DropdownMenuItem>
+                </Link>
                 <DropdownMenuItem
-                  className="text-destructive"
+                  className="text-destructive cursor-pointer"
                   onClick={() => logoutMutation.mutate()}
                 >
                   Cerrar Sesión

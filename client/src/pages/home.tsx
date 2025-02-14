@@ -5,13 +5,24 @@ import Footer from "@/components/layout/footer";
 import ProductCard from "@/components/product-card";
 import AboutSection from "@/components/about-section";
 import { ProductFilters } from "@/components/product-filters";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
 import type { Product } from "@shared/schema";
+
+const ITEMS_PER_PAGE = 6;
 
 export default function Home() {
   const { data: products, isLoading } = useQuery<Product[]>({
     queryKey: ["/api/products"],
   });
 
+  const [currentPage, setCurrentPage] = useState(1);
   const [filters, setFilters] = useState<{
     category: string | null;
     priceRange: [number, number];
@@ -28,6 +39,12 @@ export default function Home() {
 
     return matchesCategory && matchesPrice;
   });
+
+  const totalPages = filteredProducts ? Math.ceil(filteredProducts.length / ITEMS_PER_PAGE) : 0;
+  const paginatedProducts = filteredProducts?.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE
+  );
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -47,7 +64,10 @@ export default function Home() {
               {products && (
                 <ProductFilters
                   products={products}
-                  onFilterChange={setFilters}
+                  onFilterChange={(newFilters) => {
+                    setFilters(newFilters);
+                    setCurrentPage(1); // Reset to first page when filters change
+                  }}
                 />
               )}
             </div>
@@ -57,17 +77,46 @@ export default function Home() {
                 Nuestros Productos
               </h2>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
                 {isLoading ? (
-                  Array(6).fill(0).map((_, i) => (
+                  Array(ITEMS_PER_PAGE).fill(0).map((_, i) => (
                     <div key={i} className="h-[300px] bg-muted animate-pulse rounded-lg" />
                   ))
                 ) : (
-                  filteredProducts?.map((product) => (
+                  paginatedProducts?.map((product) => (
                     <ProductCard key={product.id} product={product} />
                   ))
                 )}
               </div>
+
+              {totalPages > 1 && (
+                <Pagination className="mt-8">
+                  <PaginationContent>
+                    <PaginationItem>
+                      <PaginationPrevious 
+                        onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                        className={currentPage === 1 ? "pointer-events-none opacity-50" : ""}
+                      />
+                    </PaginationItem>
+                    {[...Array(totalPages)].map((_, i) => (
+                      <PaginationItem key={i + 1}>
+                        <PaginationLink
+                          onClick={() => setCurrentPage(i + 1)}
+                          isActive={currentPage === i + 1}
+                        >
+                          {i + 1}
+                        </PaginationLink>
+                      </PaginationItem>
+                    ))}
+                    <PaginationItem>
+                      <PaginationNext
+                        onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                        className={currentPage === totalPages ? "pointer-events-none opacity-50" : ""}
+                      />
+                    </PaginationItem>
+                  </PaginationContent>
+                </Pagination>
+              )}
             </div>
           </div>
         </section>
