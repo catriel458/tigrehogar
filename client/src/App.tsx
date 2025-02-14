@@ -9,6 +9,7 @@ import AddProduct from "@/pages/add-product";
 import AuthPage from "@/pages/auth";
 import VerifyEmail from "@/pages/verify-email";
 import { ProtectedRoute } from "@/components/protected-route";
+import EditProduct from "@/pages/edit-product"; //Import the EditProduct component
 
 function Router() {
   return (
@@ -17,6 +18,7 @@ function Router() {
       <Route path="/auth" component={AuthPage} />
       <Route path="/verify-email" component={VerifyEmail} />
       <ProtectedRoute path="/add-product" component={AddProduct} />
+      <Route path="/edit-product/:id" component={EditProduct} /> {/* Added route for editing products */}
       <Route component={NotFound} />
     </Switch>
   );

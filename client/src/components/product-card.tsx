@@ -13,6 +13,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { useLocation } from "wouter";
 import type { Product } from "@shared/schema";
 
 interface ProductCardProps {
@@ -20,10 +21,11 @@ interface ProductCardProps {
   onEdit?: (product: Product) => void;
 }
 
-export default function ProductCard({ product, onEdit }: ProductCardProps) {
+export default function ProductCard({ product }: ProductCardProps) {
   const { user } = useAuth();
   const { toast } = useToast();
   const isAdmin = user?.isAdmin;
+  const [, navigate] = useLocation();
 
   const formattedPrice = new Intl.NumberFormat('es-AR', {
     style: 'currency',
@@ -78,7 +80,7 @@ export default function ProductCard({ product, onEdit }: ProductCardProps) {
             <Button
               variant="outline"
               size="icon"
-              onClick={() => onEdit?.(product)}
+              onClick={() => navigate(`/edit-product/${product.id}`)}
             >
               <Edit className="h-4 w-4" />
             </Button>
