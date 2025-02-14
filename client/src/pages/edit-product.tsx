@@ -27,17 +27,7 @@ export default function EditProduct() {
   const [, navigate] = useLocation();
   const { toast } = useToast();
 
-  // Primero obtenemos el producto
-  const { data: product, isLoading } = useQuery({
-    queryKey: ["/api/products", id],
-    queryFn: async () => {
-      const response = await apiRequest<Product>("GET", `/api/products/${id}`);
-      if (!response) throw new Error("Producto no encontrado");
-      return response;
-    },
-  });
-
-  // Inicializamos el formulario con valores vacíos
+  // Inicializar formulario con valores vacíos
   const form = useForm<InsertProduct>({
     resolver: zodResolver(insertProductSchema),
     defaultValues: {
@@ -49,9 +39,21 @@ export default function EditProduct() {
     },
   });
 
-  // Actualizamos el formulario cuando se carga el producto
+  // Cargar los datos del producto
+  const { data: product, isLoading } = useQuery<Product>({
+    queryKey: ["/api/products", id],
+    queryFn: async () => {
+      const response = await apiRequest<Product>("GET", `/api/products/${id}`);
+      console.log("Product data loaded:", response); // Debug log
+      if (!response) throw new Error("Producto no encontrado");
+      return response;
+    },
+  });
+
+  // Actualizar el formulario cuando se carga el producto
   useEffect(() => {
     if (product) {
+      console.log("Setting form values:", product); // Debug log
       form.reset({
         name: product.name,
         description: product.description,
