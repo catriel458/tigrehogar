@@ -71,11 +71,15 @@ Me gustaría coordinar la entrega y el método de pago (efectivo o Mercado Pago)
       <SheetContent>
         <SheetHeader>
           <SheetTitle>Carrito de compras</SheetTitle>
-          <SheetDescription>
-            {items.length === 0 ? (
-              'Tu carrito está vacío'
-            ) : (
-              <div className="flex flex-col gap-4">
+        </SheetHeader>
+
+        {items.length === 0 ? (
+          <SheetDescription>Tu carrito está vacío</SheetDescription>
+        ) : (
+          <div className="flex flex-col h-full">
+            {/* Lista scrollable de productos */}
+            <div className="flex-1 overflow-auto pr-4 -mr-4">
+              <div className="space-y-4">
                 {items.map((item) => (
                   <div key={item.id} className="flex gap-4 items-center border-b pb-4">
                     <img src={item.image} alt={item.name} className="w-20 h-20 object-cover rounded" />
@@ -112,44 +116,50 @@ Me gustaría coordinar la entrega y el método de pago (efectivo o Mercado Pago)
                     </div>
                   </div>
                 ))}
-                <div className="border-t pt-4">
-                  <p className="font-medium">Total: ${total/100}</p>
-                </div>
-                <div className="space-y-4 mb-4">
-                  <Input
-                    placeholder="Tu nombre"
-                    value={checkoutData.nombre}
-                    onChange={(e) => setCheckoutData(prev => ({...prev, nombre: e.target.value}))}
-                  />
-                  <Input
-                    placeholder="Tu apellido"
-                    value={checkoutData.apellido}
-                    onChange={(e) => setCheckoutData(prev => ({...prev, apellido: e.target.value}))}
-                  />
-                  <Input
-                    placeholder="Tu celular (sin 0 y sin 15)"
-                    value={checkoutData.celular}
-                    onChange={(e) => setCheckoutData(prev => ({...prev, celular: e.target.value}))}
-                  />
-                  <p className="text-sm text-muted-foreground">
-                    Al finalizar la compra nos contactaremos a la brevedad para coordinar la entrega.
-                    Aceptamos efectivo y Mercado Pago.
-                  </p>
-                </div>
+              </div>
+            </div>
+
+            {/* Sección fija con el total y botones */}
+            <div className="pt-4 border-t mt-4 space-y-4">
+              <div className="font-medium">Total: ${total/100}</div>
+
+              <div className="space-y-4">
+                <Input
+                  placeholder="Tu nombre"
+                  value={checkoutData.nombre}
+                  onChange={(e) => setCheckoutData(prev => ({...prev, nombre: e.target.value}))}
+                />
+                <Input
+                  placeholder="Tu apellido"
+                  value={checkoutData.apellido}
+                  onChange={(e) => setCheckoutData(prev => ({...prev, apellido: e.target.value}))}
+                />
+                <Input
+                  placeholder="Tu celular (sin 0 y sin 15)"
+                  value={checkoutData.celular}
+                  onChange={(e) => setCheckoutData(prev => ({...prev, celular: e.target.value}))}
+                />
+                <p className="text-sm text-muted-foreground">
+                  Al finalizar la compra nos contactaremos a la brevedad para coordinar la entrega.
+                  Aceptamos efectivo y Mercado Pago.
+                </p>
+              </div>
+
+              <div className="space-y-2">
                 <Button onClick={handleCheckout} className="w-full">
                   Contactar por WhatsApp
                 </Button>
                 <Button
                   variant="outline"
                   onClick={() => clearCart()}
-                  className="w-full mt-2"
+                  className="w-full"
                 >
                   Vaciar carrito
                 </Button>
               </div>
-            )}
-          </SheetDescription>
-        </SheetHeader>
+            </div>
+          </div>
+        )}
       </SheetContent>
     </Sheet>
   );
