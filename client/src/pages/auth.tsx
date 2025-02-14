@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { insertUserSchema } from "@shared/schema";
+import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -24,10 +25,16 @@ import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useState } from "react";
 
-type LoginFormData = {
-  username: string;
-  password: string;
-};
+const loginSchema = z.object({
+  username: z.string()
+    .min(1, "El usuario es requerido")
+    .min(3, "El usuario debe tener al menos 3 caracteres"),
+  password: z.string()
+    .min(1, "La contraseña es requerida")
+    .min(6, "La contraseña debe tener al menos 6 caracteres"),
+});
+
+type LoginFormData = z.infer<typeof loginSchema>;
 
 export default function AuthPage() {
   const [, navigate] = useLocation();
@@ -42,6 +49,7 @@ export default function AuthPage() {
   }, [user, navigate]);
 
   const loginForm = useForm<LoginFormData>({
+    resolver: zodResolver(loginSchema),
     defaultValues: {
       username: "",
       password: "",
@@ -139,7 +147,11 @@ export default function AuthPage() {
                           <FormItem>
                             <FormLabel>Usuario</FormLabel>
                             <FormControl>
-                              <Input {...field} />
+                              <Input 
+                                {...field} 
+                                placeholder="Ingresa tu usuario"
+                                autoComplete="username"
+                              />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -152,7 +164,12 @@ export default function AuthPage() {
                           <FormItem>
                             <FormLabel>Contraseña</FormLabel>
                             <FormControl>
-                              <Input type="password" {...field} />
+                              <Input 
+                                type="password" 
+                                {...field} 
+                                placeholder="Ingresa tu contraseña"
+                                autoComplete="current-password"
+                              />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -164,7 +181,7 @@ export default function AuthPage() {
                           className="w-full"
                           disabled={loginMutation.isPending}
                         >
-                          Iniciar Sesión
+                          {loginMutation.isPending ? "Iniciando sesión..." : "Iniciar Sesión"}
                         </Button>
                         <Button
                           type="button"
@@ -193,7 +210,7 @@ export default function AuthPage() {
                           <FormItem>
                             <FormLabel>Usuario</FormLabel>
                             <FormControl>
-                              <Input {...field} />
+                              <Input {...field} placeholder="Elige un usuario" />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -206,7 +223,7 @@ export default function AuthPage() {
                           <FormItem>
                             <FormLabel>Email</FormLabel>
                             <FormControl>
-                              <Input type="email" {...field} />
+                              <Input type="email" {...field} placeholder="tu@email.com" />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -219,7 +236,12 @@ export default function AuthPage() {
                           <FormItem>
                             <FormLabel>Contraseña</FormLabel>
                             <FormControl>
-                              <Input type="password" {...field} />
+                              <Input 
+                                type="password" 
+                                {...field} 
+                                placeholder="Elige una contraseña"
+                                autoComplete="new-password"
+                              />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -230,7 +252,7 @@ export default function AuthPage() {
                         className="w-full"
                         disabled={registerMutation.isPending}
                       >
-                        Registrarse
+                        {registerMutation.isPending ? "Registrando..." : "Registrarse"}
                       </Button>
                     </form>
                   </Form>

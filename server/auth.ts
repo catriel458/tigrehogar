@@ -113,26 +113,31 @@ export function setupAuth(app: Express) {
     try {
       const { username, password } = req.body;
 
+      // Validar que se proporcionen ambos campos
+      if (!username || !password) {
+        return res.status(400).json({ error: "Usuario y contraseña son requeridos" });
+      }
+
       const user = await storage.getUserByUsername(username);
       if (!user) {
-        return res.status(401).json({ error: "Invalid credentials" });
+        return res.status(401).json({ error: "Usuario o contraseña incorrectos" });
       }
 
       if (!user.emailVerified) {
-        return res.status(401).json({ error: "Please verify your email first" });
+        return res.status(401).json({ error: "Por favor, verifica tu email antes de iniciar sesión" });
       }
 
       const validPassword = await comparePasswords(password, user.password);
       if (!validPassword) {
-        return res.status(401).json({ error: "Invalid credentials" });
+        return res.status(401).json({ error: "Usuario o contraseña incorrectos" });
       }
 
       // Create session with admin status
       const isAdmin = user.username === 'admin1234' || user.isAdmin;
-      
+
       req.session.userId = user.id;
       req.session.isAdmin = isAdmin;
-      
+
       await new Promise<void>((resolve, reject) => {
         req.session.save((err) => {
           if (err) {
@@ -151,7 +156,7 @@ export function setupAuth(app: Express) {
       });
     } catch (error) {
       console.error("Login error:", error);
-      res.status(500).json({ error: "Login failed" });
+      res.status(500).json({ error: "Error al iniciar sesión. Por favor, intenta de nuevo." });
     }
   });
 
