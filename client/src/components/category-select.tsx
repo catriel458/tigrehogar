@@ -35,7 +35,7 @@ export function CategorySelect({ value, onValueChange }: CategorySelectProps) {
   const [newCategory, setNewCategory] = useState("");
   const { toast } = useToast();
 
-  const { data: categories = [], isLoading, refetch } = useQuery<Category[]>({
+  const { data: categories = [], isLoading } = useQuery({
     queryKey: ["/api/categories"],
   });
 
@@ -52,30 +52,22 @@ export function CategorySelect({ value, onValueChange }: CategorySelectProps) {
         throw new Error("Esta categoría ya existe");
       }
 
-      const response = await apiRequest<Category>("POST", "/api/categories", { 
+      return await apiRequest("POST", "/api/categories", { 
         name: normalizedName 
       });
-      console.log("API Response:", response);
-      return response;
     },
-    onSuccess: async (newCategory) => {
-      console.log("Category created successfully:", newCategory);
+    onSuccess: async () => {
+      console.log("Category created successfully");
       setNewCategory("");
       setIsOpen(false);
 
       // Actualizar la lista de categorías
       await queryClient.invalidateQueries({ queryKey: ["/api/categories"] });
-      await refetch(); // Forzar una recarga inmediata
 
       toast({
         title: "Categoría creada",
         description: "La categoría ha sido creada exitosamente.",
       });
-
-      // Seleccionar la nueva categoría
-      if (newCategory?.name) {
-        onValueChange(newCategory.name);
-      }
     },
     onError: (error: Error) => {
       console.error("Error creating category:", error);
@@ -104,8 +96,6 @@ export function CategorySelect({ value, onValueChange }: CategorySelectProps) {
   const sortedCategories = [...categories].sort((a, b) => 
     a.name.localeCompare(b.name)
   );
-
-  console.log("Current categories:", sortedCategories);
 
   return (
     <div className="space-y-4">

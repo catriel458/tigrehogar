@@ -30,12 +30,6 @@ export default function EditProduct() {
   const { toast } = useToast();
   const { user } = useAuth();
 
-  // Verificar si el usuario es administrador
-  if (!user?.isAdmin) {
-    navigate("/");
-    return null;
-  }
-
   const form = useForm<InsertProduct>({
     resolver: zodResolver(insertProductSchema),
     defaultValues: {
@@ -47,13 +41,12 @@ export default function EditProduct() {
     }
   });
 
-  const { data: product, isLoading } = useQuery<Product>({
+  const { data: product, isLoading } = useQuery({
     queryKey: ["/api/products", id],
     queryFn: async () => {
-      if (!id) return null;
-      const response = await apiRequest<Product>("GET", `/api/products/${id}`);
-      console.log("Product data received:", response);
-      return response;
+      if (!id) throw new Error("No product ID provided");
+      const response = await apiRequest("GET", `/api/products/${id}`);
+      return response as Product;
     },
     enabled: !!id,
   });
@@ -75,7 +68,8 @@ export default function EditProduct() {
     mutationFn: async (data: InsertProduct) => {
       if (!id) throw new Error("Product ID is required");
       console.log("Sending update request with data:", data);
-      return await apiRequest<Product>("PUT", `/api/products/${id}`, data);
+      const response = await apiRequest("PUT", `/api/products/${id}`, data);
+      return response as Product;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/products"] });
