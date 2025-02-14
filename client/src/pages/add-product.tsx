@@ -20,10 +20,12 @@ import { insertProductSchema, type InsertProduct } from "@shared/schema";
 import Header from "@/components/layout/header";
 import Footer from "@/components/layout/footer";
 import { ProtectedRoute } from "@/components/protected-route";
+import { useAuth } from "@/hooks/use-auth";
 
 export default function AddProduct() {
   const [, navigate] = useLocation();
   const { toast } = useToast();
+  const { user, isLoading: authLoading } = useAuth();
 
   const form = useForm<InsertProduct>({
     resolver: zodResolver(insertProductSchema),
@@ -64,6 +66,20 @@ export default function AddProduct() {
     };
     mutation.mutate(dataWithPriceInCents);
   });
+
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex flex-col">
+        <Header />
+        <main className="flex-1 container mx-auto px-4 py-8">
+          <div className="flex justify-center items-center h-full">
+            <p>Cargando...</p>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -112,12 +128,12 @@ export default function AddProduct() {
                       <FormItem>
                         <FormLabel>Precio (en pesos)</FormLabel>
                         <FormControl>
-                          <Input 
-                            type="number" 
+                          <Input
+                            type="number"
                             {...field}
                             value={field.value / 100}
                             onChange={(e) => {
-                              const value = e.target.value === '' ? 0 : parseFloat(e.target.value);
+                              const value = e.target.value === "" ? 0 : parseFloat(e.target.value);
                               field.onChange(value);
                             }}
                           />
