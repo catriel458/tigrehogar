@@ -46,6 +46,14 @@ export default function AboutSection() {
             </CardContent>
           </Card>
         </div>
+
+        <div className="mt-16">
+          <img 
+            src="https://www.tigre.gob.ar/public/assets/fotos_novedades/1582895164.jpg"
+            alt="Municipio de Tigre"
+            className="w-full max-h-[400px] object-cover rounded-lg"
+          />
+        </div>
       </div>
     </section>
   );

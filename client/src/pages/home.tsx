@@ -24,15 +24,11 @@ export default function Home() {
             Tu tienda de confianza en Zona Norte para artículos del hogar y más
           </p>
 
-          <div className="mb-12">
-            <img 
-              src="https://www.tigre.gob.ar/public/assets/fotos_novedades/1582895164.jpg"
-              alt="Municipio de Tigre"
-              className="w-full max-h-[400px] object-cover rounded-lg"
-            />
-          </div>
+          <h2 className="text-3xl font-serif text-center mb-8">
+            Nuestros Productos
+          </h2>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-16">
             {isLoading ? (
               Array(6).fill(0).map((_, i) => (
                 <div key={i} className="h-[300px] bg-muted animate-pulse rounded-lg" />
