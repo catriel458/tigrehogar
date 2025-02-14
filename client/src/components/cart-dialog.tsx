@@ -14,11 +14,31 @@ import {
 export function CartDialog() {
   const { items, total, removeItem, clearCart } = useCart();
 
+  const [checkoutData, setCheckoutData] = useState({
+    nombre: '',
+    apellido: '',
+    celular: ''
+  });
+
   const handleCheckout = () => {
+    if (!checkoutData.nombre || !checkoutData.apellido || !checkoutData.celular) {
+      toast({
+        title: "Error",
+        description: "Por favor completa todos los campos",
+        variant: "destructive"
+      });
+      return;
+    }
+
     const message = `Hola! Me gustaría comprar los siguientes productos:%0A
 ${items.map(item => `- ${item.quantity}x ${item.name} ($${item.price/100})`).join('%0A')}
 %0A
-Total: $${total/100}`;
+Total: $${total/100}%0A
+%0A
+Datos de contacto:%0A
+Nombre: ${checkoutData.nombre}%0A
+Apellido: ${checkoutData.apellido}%0A
+Celular: ${checkoutData.celular}`;
     window.open(`https://wa.me/542213557519?text=${message}`, '_blank');
   };
 
@@ -61,6 +81,23 @@ Total: $${total/100}`;
                 ))}
                 <div className="border-t pt-4">
                   <p className="font-medium">Total: ${total/100}</p>
+                </div>
+                <div className="space-y-4 mb-4">
+                  <Input
+                    placeholder="Nombre"
+                    value={checkoutData.nombre}
+                    onChange={(e) => setCheckoutData(prev => ({...prev, nombre: e.target.value}))}
+                  />
+                  <Input
+                    placeholder="Apellido"
+                    value={checkoutData.apellido}
+                    onChange={(e) => setCheckoutData(prev => ({...prev, apellido: e.target.value}))}
+                  />
+                  <Input
+                    placeholder="Celular"
+                    value={checkoutData.celular}
+                    onChange={(e) => setCheckoutData(prev => ({...prev, celular: e.target.value}))}
+                  />
                 </div>
                 <Button onClick={handleCheckout} className="w-full">
                   Finalizar compra

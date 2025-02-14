@@ -15,6 +15,7 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useLocation } from "wouter";
 import type { Product } from "@shared/schema";
+import { useCart } from "@/hooks/use-cart";
 
 interface ProductCardProps {
   product: Product;
@@ -76,7 +77,17 @@ export default function ProductCard({ product }: ProductCardProps) {
       <CardFooter className="flex justify-between items-center">
         <div>
           <p className="text-lg font-semibold">{formattedPrice}</p>
-          <Button onClick={() => useCart.getState().addItem(product)} variant="default" size="sm">
+          <Button 
+            onClick={() => {
+              if (!user) {
+                navigate('/auth');
+                return;
+              }
+              useCart.getState().addItem(product);
+            }} 
+            variant="default" 
+            size="sm"
+          >
             Agregar al carrito
           </Button>
         </div>
