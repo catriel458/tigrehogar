@@ -90,7 +90,11 @@ export default function AddProduct() {
           </CardHeader>
           <CardContent>
             <Form {...form}>
-              <form onSubmit={form.handleSubmit((data) => mutation.mutate(data))} className="space-y-4">
+              <form 
+                onSubmit={form.handleSubmit((data) => mutation.mutate(data))} 
+                className="space-y-4"
+                encType="multipart/form-data"
+              >
                 <FormField
                   control={form.control}
                   name="name"

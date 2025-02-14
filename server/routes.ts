@@ -69,7 +69,7 @@ export function registerRoutes(app: Express) {
         description: req.body.description,
         price: parseInt(req.body.price),
         category: req.body.category,
-        image: imageUrl
+        image: imageUrl,
       };
 
       console.log('Datos del producto a validar:', productData);
