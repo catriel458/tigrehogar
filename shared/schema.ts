@@ -28,7 +28,10 @@ export const insertProductSchema = z.object({
   name: z.string().min(3, "El nombre debe tener al menos 3 caracteres"),
   description: z.string().min(10, "La descripción debe tener al menos 10 caracteres"),
   price: z.number().positive("El precio debe ser positivo").min(1, "El precio debe ser mayor a 0"),
-  image: z.string().url("Debe ser una URL válida"),
+  image: z.union([
+    z.string().url("Debe ser una URL válida"),
+    z.instanceof(File, { message: "Debe ser un archivo de imagen válido" })
+  ]),
   category: z.string().min(2, "La categoría debe tener al menos 2 caracteres"),
 });
 

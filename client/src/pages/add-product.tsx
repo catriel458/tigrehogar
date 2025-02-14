@@ -11,6 +11,7 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
+  FormDescription,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -19,6 +20,7 @@ import { queryClient, apiRequest } from "@/lib/queryClient";
 import { insertProductSchema, type InsertProduct } from "@shared/schema";
 import Header from "@/components/layout/header";
 import Footer from "@/components/layout/footer";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export default function AddProduct() {
   const [, navigate] = useLocation();
@@ -36,7 +38,15 @@ export default function AddProduct() {
 
   const mutation = useMutation({
     mutationFn: async (data: InsertProduct) => {
-      await apiRequest("POST", "/api/products", data);
+      const formData = new FormData();
+      Object.entries(data).forEach(([key, value]) => {
+        if (value instanceof File) {
+          formData.append(key, value);
+        } else {
+          formData.append(key, String(value));
+        }
+      });
+      await apiRequest("POST", "/api/products", formData);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/products"] });
@@ -107,19 +117,58 @@ export default function AddProduct() {
                   )}
                 />
 
-                <FormField
-                  control={form.control}
-                  name="image"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>URL de la Imagen</FormLabel>
-                      <FormControl>
-                        <Input {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                <Tabs defaultValue="url" className="w-full">
+                  <TabsList className="grid w-full grid-cols-2">
+                    <TabsTrigger value="url">URL de Imagen</TabsTrigger>
+                    <TabsTrigger value="file">Subir Imagen</TabsTrigger>
+                  </TabsList>
+                  <TabsContent value="url">
+                    <FormField
+                      control={form.control}
+                      name="image"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>URL de la Imagen</FormLabel>
+                          <FormControl>
+                            <Input type="url" {...field} />
+                          </FormControl>
+                          <FormDescription>
+                            Ingresa la URL de la imagen del producto
+                          </FormDescription>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </TabsContent>
+                  <TabsContent value="file">
+                    <FormField
+                      control={form.control}
+                      name="image"
+                      render={({ field: { value, onChange, ...field } }) => (
+                        <FormItem>
+                          <FormLabel>Subir Imagen</FormLabel>
+                          <FormControl>
+                            <Input
+                              type="file"
+                              accept="image/*"
+                              onChange={(e) => {
+                                const file = e.target.files?.[0];
+                                if (file) {
+                                  onChange(file);
+                                }
+                              }}
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormDescription>
+                            Selecciona una imagen de tu ordenador
+                          </FormDescription>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </TabsContent>
+                </Tabs>
 
                 <FormField
                   control={form.control}
