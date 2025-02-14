@@ -105,7 +105,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         title: "Sesión cerrada",
         description: "Has cerrado sesión exitosamente.",
       });
-      navigate("/auth"); // Redirigir al login después de cerrar sesión
+      navigate("/"); // Redirigir a la página principal
     },
   });
 
