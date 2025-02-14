@@ -2,13 +2,8 @@ import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
 import {
   Dialog,
   DialogContent,
@@ -113,55 +108,62 @@ export function CategorySelect({ value, onValueChange }: CategorySelectProps) {
   console.log("Current categories:", sortedCategories);
 
   return (
-    <div className="space-y-2">
-      <Select value={value} onValueChange={onValueChange}>
-        <SelectTrigger>
-          {isLoading ? (
-            <span>Cargando categorías...</span>
-          ) : (
-            <SelectValue placeholder="Seleccionar categoría" />
-          )}
-        </SelectTrigger>
-        <SelectContent>
+    <div className="space-y-4">
+      {isLoading ? (
+        <div>Cargando categorías...</div>
+      ) : (
+        <div className="grid grid-cols-2 gap-4">
           {sortedCategories.map((category) => (
-            <SelectItem key={category.id} value={category.name}>
-              {category.name}
-            </SelectItem>
+            <div key={category.id} className="flex items-center space-x-2">
+              <Checkbox
+                id={`category-${category.id}`}
+                checked={value === category.name}
+                onCheckedChange={(checked) => {
+                  if (checked) {
+                    onValueChange(category.name);
+                  } else {
+                    onValueChange("");
+                  }
+                }}
+              />
+              <Label htmlFor={`category-${category.id}`}>{category.name}</Label>
+            </div>
           ))}
-          <Dialog open={isOpen} onOpenChange={setIsOpen}>
-            <DialogTrigger asChild>
-              <Button
-                variant="ghost"
-                className="w-full justify-start font-normal"
-                type="button"
-              >
-                + Agregar nueva categoría
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Agregar nueva categoría</DialogTitle>
-              </DialogHeader>
-              <div className="space-y-4">
-                <Input
-                  value={newCategory}
-                  onChange={(e) => setNewCategory(e.target.value)}
-                  placeholder="Nombre de la categoría"
-                />
-                <Button
-                  onClick={handleCreateCategory}
-                  disabled={createCategoryMutation.isPending}
-                  className="w-full"
-                >
-                  {createCategoryMutation.isPending
-                    ? "Creando..."
-                    : "Crear categoría"}
-                </Button>
-              </div>
-            </DialogContent>
-          </Dialog>
-        </SelectContent>
-      </Select>
+        </div>
+      )}
+
+      <Dialog open={isOpen} onOpenChange={setIsOpen}>
+        <DialogTrigger asChild>
+          <Button
+            variant="outline"
+            className="w-full mt-4"
+            type="button"
+          >
+            + Agregar nueva categoría
+          </Button>
+        </DialogTrigger>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Agregar nueva categoría</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <Input
+              value={newCategory}
+              onChange={(e) => setNewCategory(e.target.value)}
+              placeholder="Nombre de la categoría"
+            />
+            <Button
+              onClick={handleCreateCategory}
+              disabled={createCategoryMutation.isPending}
+              className="w-full"
+            >
+              {createCategoryMutation.isPending
+                ? "Creando..."
+                : "Crear categoría"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
