@@ -41,8 +41,8 @@ export default function AddProduct() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/products"] });
       toast({
-        title: "Product added successfully",
-        description: "Your product has been added to the store.",
+        title: "Producto agregado",
+        description: "Tu producto ha sido agregado a la tienda.",
       });
       navigate("/");
     },
@@ -51,11 +51,11 @@ export default function AddProduct() {
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
-      
+
       <main className="flex-1 container mx-auto px-4 py-8">
         <Card className="max-w-2xl mx-auto">
           <CardHeader>
-            <CardTitle>Add New Product</CardTitle>
+            <CardTitle>Agregar Nuevo Producto</CardTitle>
           </CardHeader>
           <CardContent>
             <Form {...form}>
@@ -65,7 +65,7 @@ export default function AddProduct() {
                   name="name"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Product Name</FormLabel>
+                      <FormLabel>Nombre del Producto</FormLabel>
                       <FormControl>
                         <Input {...field} />
                       </FormControl>
@@ -79,7 +79,7 @@ export default function AddProduct() {
                   name="description"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Description</FormLabel>
+                      <FormLabel>Descripción</FormLabel>
                       <FormControl>
                         <Textarea {...field} />
                       </FormControl>
@@ -112,7 +112,7 @@ export default function AddProduct() {
                   name="image"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Image URL</FormLabel>
+                      <FormLabel>URL de la Imagen</FormLabel>
                       <FormControl>
                         <Input {...field} />
                       </FormControl>
@@ -126,7 +126,7 @@ export default function AddProduct() {
                   name="category"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Category</FormLabel>
+                      <FormLabel>Categoría</FormLabel>
                       <FormControl>
                         <Input {...field} />
                       </FormControl>
@@ -136,7 +136,7 @@ export default function AddProduct() {
                 />
 
                 <Button type="submit" className="w-full" disabled={mutation.isPending}>
-                  {mutation.isPending ? "Adding..." : "Add Product"}
+                  {mutation.isPending ? "Agregando..." : "Agregar Producto"}
                 </Button>
               </form>
             </Form>

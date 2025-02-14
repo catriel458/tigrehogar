@@ -38,7 +38,7 @@ export default function Header() {
             <Link href="/add-product">
               <Button variant="ghost" className="gap-2">
                 <PlusCircle className="h-4 w-4" />
-                Add Product
+                Agregar Producto
               </Button>
             </Link>
           )}
