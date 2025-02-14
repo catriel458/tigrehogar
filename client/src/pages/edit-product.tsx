@@ -39,11 +39,12 @@ export default function EditProduct() {
     }
   });
 
-  const { data: product, isLoading } = useQuery({
+  const { data: product, isLoading } = useQuery<Product>({
     queryKey: ["/api/products", Number(id)],
     queryFn: async () => {
       if (!id) throw new Error("No product ID provided");
-      return await apiRequest("GET", `/api/products/${id}`);
+      const response = await apiRequest<Product>("GET", `/api/products/${id}`);
+      return response;
     },
     enabled: !!id,
   });
@@ -63,7 +64,7 @@ export default function EditProduct() {
   const mutation = useMutation({
     mutationFn: async (data: InsertProduct) => {
       if (!id) throw new Error("Product ID is required");
-      return await apiRequest("PUT", `/api/products/${id}`, data);
+      return await apiRequest<Product>("PUT", `/api/products/${id}`, data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/products"] });

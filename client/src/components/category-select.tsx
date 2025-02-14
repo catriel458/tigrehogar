@@ -35,29 +35,21 @@ export function CategorySelect({ value, onValueChange }: CategorySelectProps) {
   const [newCategory, setNewCategory] = useState("");
   const { toast } = useToast();
 
-  const { data: categories = [], isLoading } = useQuery({
+  const { data: categories = [], isLoading } = useQuery<Category[]>({
     queryKey: ["/api/categories"],
     queryFn: async () => {
-      const response = await apiRequest("GET", "/api/categories");
-      return response as Category[];
+      const response = await apiRequest<Category[]>("GET", "/api/categories");
+      return response || [];
     },
   });
 
   const createCategoryMutation = useMutation({
     mutationFn: async (name: string) => {
       const normalizedName = normalizeCategory(name);
-
-      const categoryExists = categories.some(
-        cat => cat.name.toLowerCase() === normalizedName.toLowerCase()
-      );
-
-      if (categoryExists) {
+      if (categories.some(cat => cat.name.toLowerCase() === normalizedName.toLowerCase())) {
         throw new Error("Esta categoría ya existe");
       }
-
-      await apiRequest("POST", "/api/categories", { 
-        name: normalizedName 
-      });
+      await apiRequest("POST", "/api/categories", { name: normalizedName });
     },
     onSuccess: () => {
       setNewCategory("");
@@ -86,43 +78,42 @@ export function CategorySelect({ value, onValueChange }: CategorySelectProps) {
       });
       return;
     }
-
     createCategoryMutation.mutate(newCategory);
   };
 
-  const sortedCategories = [...categories].sort((a, b) => 
-    a.name.localeCompare(b.name)
-  );
+  const sortedCategories = Array.isArray(categories) 
+    ? [...categories].sort((a, b) => a.name.localeCompare(b.name))
+    : [];
+
+  if (isLoading) {
+    return <div>Cargando categorías...</div>;
+  }
 
   return (
     <div className="space-y-4">
-      {isLoading ? (
-        <div>Cargando categorías...</div>
-      ) : (
-        <div className="grid grid-cols-2 gap-4">
-          {sortedCategories.map((category) => (
-            <div key={category.id} className="flex items-center space-x-2">
-              <Checkbox
-                id={`category-${category.id}`}
-                checked={value === category.name}
-                onCheckedChange={() => {
-                  if (value === category.name) {
-                    onValueChange("");
-                  } else {
-                    onValueChange(category.name);
-                  }
-                }}
-              />
-              <Label
-                htmlFor={`category-${category.id}`}
-                className="cursor-pointer"
-              >
-                {category.name}
-              </Label>
-            </div>
-          ))}
-        </div>
-      )}
+      <div className="grid grid-cols-2 gap-4">
+        {sortedCategories.map((category) => (
+          <div key={category.id} className="flex items-center space-x-2">
+            <Checkbox
+              id={`category-${category.id}`}
+              checked={value === category.name}
+              onCheckedChange={() => {
+                if (value === category.name) {
+                  onValueChange("");
+                } else {
+                  onValueChange(category.name);
+                }
+              }}
+            />
+            <Label
+              htmlFor={`category-${category.id}`}
+              className="cursor-pointer"
+            >
+              {category.name}
+            </Label>
+          </div>
+        ))}
+      </div>
 
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
         <DialogTrigger asChild>
