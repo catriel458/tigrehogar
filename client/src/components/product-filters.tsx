@@ -24,10 +24,10 @@ export function ProductFilters({ products, onFilterChange }: ProductFiltersProps
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 1000000]);
   const [maxPrice, setMaxPrice] = useState(1000000);
 
-  // Obtener categorías únicas de los productos
+  // Get unique categories from products
   const categories = Array.from(new Set(products.map((p) => p.category)));
 
-  // Encontrar el precio máximo entre todos los productos
+  // Find max price among all products
   useEffect(() => {
     if (products.length > 0) {
       const max = Math.max(...products.map((p) => p.price));
@@ -37,10 +37,11 @@ export function ProductFilters({ products, onFilterChange }: ProductFiltersProps
   }, [products]);
 
   const handlePriceChange = (value: number[]) => {
-    setPriceRange([value[0], value[1]]);
+    const newRange: [number, number] = [value[0], value[1]];
+    setPriceRange(newRange);
     onFilterChange({
       category: selectedCategory,
-      priceRange: [value[0], value[1]],
+      priceRange: newRange,
     });
   };
 
