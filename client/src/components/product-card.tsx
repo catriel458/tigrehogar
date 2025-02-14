@@ -26,7 +26,7 @@ export default function ProductCard({ product, onEdit }: ProductCardProps) {
   const formattedPrice = new Intl.NumberFormat('es-AR', {
     style: 'currency',
     currency: 'ARS'
-  }).format(product.price);
+  }).format(product.price / 100);
 
   const deleteMutation = useMutation({
     mutationFn: async () => {

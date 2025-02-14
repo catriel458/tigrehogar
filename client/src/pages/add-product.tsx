@@ -93,9 +93,14 @@ export default function AddProduct() {
                   name="price"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Price (in cents)</FormLabel>
+                      <FormLabel>Precio (en pesos)</FormLabel>
                       <FormControl>
-                        <Input type="number" {...field} onChange={e => field.onChange(parseInt(e.target.value))} />
+                        <Input 
+                          type="number" 
+                          {...field} 
+                          value={field.value / 100}
+                          onChange={e => field.onChange(Math.round(parseFloat(e.target.value) * 100))} 
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
