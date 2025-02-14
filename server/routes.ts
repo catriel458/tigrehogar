@@ -25,7 +25,8 @@ export function registerRoutes(app: Express) {
   });
 
   app.put("/api/products/:id", async (req, res) => {
-    if (!req.session.isAdmin) {
+    const user = await storage.getUserById(req.session.userId);
+    if (!user?.isAdmin) {
       return res.status(403).json({ error: "Solo los administradores pueden editar productos" });
     }
 
@@ -45,7 +46,8 @@ export function registerRoutes(app: Express) {
 
   app.delete("/api/products/:id", async (req, res) => {
     console.log("Session:", req.session);
-    if (!req.session.isAdmin && req.session.userId !== 1) {
+    const user = await storage.getUserById(req.session.userId);
+    if (!user?.isAdmin) {
       return res.status(403).json({ error: "Solo los administradores pueden eliminar productos" });
     }
 
