@@ -128,12 +128,17 @@ export function setupAuth(app: Express) {
       }
 
       // Create session with admin status
-      // Configurar la sesión
       req.session.userId = user.id;
-      req.session.isAdmin = true; // Forzar el estado de admin para admin1234
+      req.session.isAdmin = user.isAdmin || user.username === 'admin1234';
       
-      // Guardar la sesión
-      await new Promise<void>((resolve) => req.session.save(() => resolve()));
+      console.log("Creating session:", req.session);
+      
+      // Guardar la sesión de forma síncrona
+      req.session.save((err) => {
+        if (err) {
+          console.error("Error saving session:", err);
+        }
+      });
       
       // Enviar respuesta
       const { password: _, ...userWithoutPassword } = user;
