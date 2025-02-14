@@ -1,25 +1,40 @@
 import { useAuth } from "@/hooks/use-auth";
-import { useLocation } from "wouter";
-import { ReactNode, useEffect } from "react";
+import { Route, useLocation } from "wouter";
+import { Loader2 } from "lucide-react";
 
-export function ProtectedRoute({ children }: { children: ReactNode }) {
+type ProtectedRouteProps = {
+  path: string;
+  component: () => JSX.Element;
+};
+
+export function ProtectedRoute({ path, component: Component }: ProtectedRouteProps) {
   const { user, isLoading } = useAuth();
-  const [, navigate] = useLocation();
+  const [, setLocation] = useLocation();
 
-  useEffect(() => {
-    if (!isLoading && !user?.isAdmin) {
-      console.log("Protected route: User not authorized, redirecting to home");
-      navigate("/");
-    }
-  }, [user, isLoading, navigate]);
+  return (
+    <Route path={path}>
+      {() => {
+        if (isLoading) {
+          return (
+            <div className="flex items-center justify-center min-h-screen">
+              <Loader2 className="h-8 w-8 animate-spin" />
+            </div>
+          );
+        }
 
-  if (isLoading) {
-    return <div className="p-4">Cargando...</div>;
-  }
+        if (!user) {
+          setLocation("/auth");
+          return null;
+        }
 
-  if (!user?.isAdmin) {
-    return null;
-  }
+        // Solo permitir acceso a /add-product si el usuario es administrador
+        if (path === "/add-product" && !user.isAdmin) {
+          setLocation("/");
+          return null;
+        }
 
-  return <>{children}</>;
+        return <Component />;
+      }}
+    </Route>
+  );
 }
