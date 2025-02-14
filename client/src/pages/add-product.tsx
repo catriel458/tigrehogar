@@ -19,10 +19,12 @@ import { queryClient, apiRequest } from "@/lib/queryClient";
 import { insertProductSchema, type InsertProduct } from "@shared/schema";
 import Header from "@/components/layout/header";
 import Footer from "@/components/layout/footer";
+import { CategorySelect } from "@/components/category-select";
 
 export default function AddProduct() {
   const [, navigate] = useLocation();
   const { toast } = useToast();
+
   const form = useForm<InsertProduct>({
     resolver: zodResolver(insertProductSchema),
     defaultValues: {
@@ -45,6 +47,13 @@ export default function AddProduct() {
         description: "Tu producto ha sido agregado a la tienda.",
       });
       navigate("/");
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error al agregar",
+        description: error.message,
+        variant: "destructive",
+      });
     },
   });
 
@@ -128,7 +137,10 @@ export default function AddProduct() {
                     <FormItem>
                       <FormLabel>Categoría</FormLabel>
                       <FormControl>
-                        <Input {...field} />
+                        <CategorySelect
+                          value={field.value}
+                          onValueChange={field.onChange}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>

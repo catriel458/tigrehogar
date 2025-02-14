@@ -1,4 +1,3 @@
-
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery } from "@tanstack/react-query";
@@ -17,29 +16,33 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { queryClient, apiRequest } from "@/lib/queryClient";
-import { insertProductSchema, type InsertProduct } from "@shared/schema";
+import { insertProductSchema, type InsertProduct, type Product } from "@shared/schema";
 import Header from "@/components/layout/header";
 import Footer from "@/components/layout/footer";
+import { CategorySelect } from "@/components/category-select";
 
 export default function EditProduct() {
   const { id } = useParams();
   const [, navigate] = useLocation();
   const { toast } = useToast();
-  
-  const { data: product } = useQuery({
+
+  const { data: product, isLoading } = useQuery<Product>({
     queryKey: ["/api/products", id],
-    queryFn: () => apiRequest("GET", `/api/products/${id}`),
+    queryFn: async () => {
+      const response = await apiRequest("GET", `/api/products/${id}`);
+      return response;
+    },
   });
 
   const form = useForm<InsertProduct>({
     resolver: zodResolver(insertProductSchema),
-    values: {
-      name: product?.name || "",
-      description: product?.description || "",
-      price: product?.price || 0,
-      image: product?.image || "",
-      category: product?.category || "",
-    },
+    values: product ? {
+      name: product.name,
+      description: product.description,
+      price: product.price,
+      image: product.image,
+      category: product.category,
+    } : undefined,
   });
 
   const mutation = useMutation({
@@ -63,10 +66,25 @@ export default function EditProduct() {
     },
   });
 
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex flex-col">
+        <Header />
+        <main className="flex-1 container mx-auto px-4 py-8">
+          <div className="max-w-2xl mx-auto animate-pulse space-y-4">
+            <div className="h-8 bg-muted rounded w-1/4" />
+            <div className="h-[400px] bg-muted rounded" />
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
-      
+
       <main className="flex-1 container mx-auto px-4 py-8">
         <Card className="max-w-2xl mx-auto">
           <CardHeader>
@@ -143,7 +161,10 @@ export default function EditProduct() {
                     <FormItem>
                       <FormLabel>Categoría</FormLabel>
                       <FormControl>
-                        <Input {...field} />
+                        <CategorySelect
+                          value={field.value}
+                          onValueChange={field.onChange}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>

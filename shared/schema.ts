@@ -2,6 +2,11 @@ import { pgTable, text, serial, integer, boolean, timestamp } from "drizzle-orm/
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
+export const categories = pgTable("categories", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull().unique(),
+});
+
 export const products = pgTable("products", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
@@ -24,13 +29,19 @@ export const users = pgTable("users", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
-export const insertProductSchema = z.object({
-  name: z.string().min(3, "El nombre debe tener al menos 3 caracteres"),
-  description: z.string().min(10, "La descripción debe tener al menos 10 caracteres"),
-  price: z.number().positive("El precio debe ser positivo").min(1, "El precio debe ser mayor a 0"),
-  image: z.string().url("Debe ser una URL válida"),
-  category: z.string().min(2, "La categoría debe tener al menos 2 caracteres"),
-});
+export const insertProductSchema = createInsertSchema(products)
+  .extend({
+    name: z.string().min(3, "El nombre debe tener al menos 3 caracteres"),
+    description: z.string().min(10, "La descripción debe tener al menos 10 caracteres"),
+    price: z.number().positive("El precio debe ser positivo").min(1, "El precio debe ser mayor a 0"),
+    image: z.string().url("Debe ser una URL válida"),
+    category: z.string().min(2, "La categoría debe tener al menos 2 caracteres"),
+  });
+
+export const insertCategorySchema = createInsertSchema(categories)
+  .extend({
+    name: z.string().min(2, "La categoría debe tener al menos 2 caracteres"),
+  });
 
 export const insertUserSchema = createInsertSchema(users)
   .pick({
@@ -46,5 +57,7 @@ export const insertUserSchema = createInsertSchema(users)
 
 export type InsertProduct = z.infer<typeof insertProductSchema>;
 export type Product = typeof products.$inferSelect;
+export type InsertCategory = z.infer<typeof insertCategorySchema>;
+export type Category = typeof categories.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
