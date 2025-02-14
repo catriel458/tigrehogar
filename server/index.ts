@@ -1,34 +1,50 @@
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
+import { setupAuth } from "./auth";
+import session from "express-session";
+import createMemoryStore from "memorystore";
 
 const app = express();
+
+// Configuración de sesión
+const MemoryStore = createMemoryStore(session);
+app.use(session({
+  secret: 'your-secret-key',
+  resave: false,
+  saveUninitialized: false,
+  store: new MemoryStore({
+    checkPeriod: 86400000 // prune expired entries every 24h
+  })
+}));
+
+// Middleware para parsear JSON - debe estar antes de las rutas
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
+// Middleware de logging
 app.use((req, res, next) => {
   const start = Date.now();
   const path = req.path;
-  let capturedJsonResponse: Record<string, any> | undefined = undefined;
 
-  const originalResJson = res.json;
-  res.json = function (bodyJson, ...args) {
-    capturedJsonResponse = bodyJson;
-    return originalResJson.apply(res, [bodyJson, ...args]);
+  // Capturar el body de la request para logging
+  if (path.startsWith("/api")) {
+    console.log(`${req.method} ${path} Request Body:`, req.body);
+  }
+
+  // Interceptar la respuesta para logging
+  const originalJson = res.json;
+  res.json = function(body) {
+    if (path.startsWith("/api")) {
+      console.log(`${req.method} ${path} Response Body:`, body);
+    }
+    return originalJson.call(this, body);
   };
 
   res.on("finish", () => {
     const duration = Date.now() - start;
     if (path.startsWith("/api")) {
       let logLine = `${req.method} ${path} ${res.statusCode} in ${duration}ms`;
-      if (capturedJsonResponse) {
-        logLine += ` :: ${JSON.stringify(capturedJsonResponse)}`;
-      }
-
-      if (logLine.length > 80) {
-        logLine = logLine.slice(0, 79) + "…";
-      }
-
       log(logLine);
     }
   });
@@ -37,27 +53,24 @@ app.use((req, res, next) => {
 });
 
 (async () => {
+  // Configurar autenticación
+  setupAuth(app);
+
   const server = registerRoutes(app);
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
+    console.error('Error:', err);
     const status = err.status || err.statusCode || 500;
     const message = err.message || "Internal Server Error";
-
-    res.status(status).json({ message });
-    throw err;
+    res.status(status).json({ error: message });
   });
 
-  // importantly only setup vite in development and after
-  // setting up all the other routes so the catch-all route
-  // doesn't interfere with the other routes
   if (app.get("env") === "development") {
     await setupVite(app, server);
   } else {
     serveStatic(app);
   }
 
-  // ALWAYS serve the app on port 5000
-  // this serves both the API and the client
   const PORT = 5000;
   server.listen(PORT, "0.0.0.0", () => {
     log(`serving on port ${PORT}`);

@@ -2,8 +2,13 @@ import { QueryClient, QueryFunction } from "@tanstack/react-query";
 
 async function throwIfResNotOk(res: Response) {
   if (!res.ok) {
-    const text = (await res.text()) || res.statusText;
-    throw new Error(`${res.status}: ${text}`);
+    const text = await res.text();
+    console.error('API Error Response:', {
+      status: res.status,
+      statusText: res.statusText,
+      body: text
+    });
+    throw new Error(text || res.statusText);
   }
 }
 
@@ -12,6 +17,12 @@ export async function apiRequest(
   url: string,
   data?: unknown | undefined,
 ): Promise<Response> {
+  console.log('API Request:', {
+    method,
+    url,
+    data
+  });
+
   const res = await fetch(url, {
     method,
     headers: data ? { "Content-Type": "application/json" } : {},
@@ -38,7 +49,12 @@ export const getQueryFn: <T>(options: {
     }
 
     await throwIfResNotOk(res);
-    return await res.json();
+    try {
+      return await res.json();
+    } catch (error) {
+      console.error('JSON Parse Error:', error);
+      throw new Error('Failed to parse server response');
+    }
   };
 
 export const queryClient = new QueryClient({
