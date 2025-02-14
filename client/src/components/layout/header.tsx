@@ -1,8 +1,17 @@
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
-import { Home, PlusCircle } from "lucide-react";
+import { Home, PlusCircle, User } from "lucide-react";
+import { useAuth } from "@/hooks/use-auth";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 export default function Header() {
+  const { user, logoutMutation } = useAuth();
+
   return (
     <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container mx-auto px-4 h-14 flex items-center justify-between">
@@ -13,12 +22,43 @@ export default function Header() {
           </a>
         </Link>
 
-        <Link href="/add-product">
-          <Button variant="ghost" className="gap-2">
-            <PlusCircle className="h-4 w-4" />
-            Add Product
-          </Button>
-        </Link>
+        <div className="flex items-center space-x-4">
+          {user?.isAdmin && (
+            <Link href="/add-product">
+              <Button variant="ghost" className="gap-2">
+                <PlusCircle className="h-4 w-4" />
+                Add Product
+              </Button>
+            </Link>
+          )}
+
+          {user ? (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="gap-2">
+                  <User className="h-4 w-4" />
+                  {user.username}
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem>Mi Perfil</DropdownMenuItem>
+                <DropdownMenuItem
+                  className="text-destructive"
+                  onClick={() => logoutMutation.mutate()}
+                >
+                  Cerrar Sesión
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          ) : (
+            <Link href="/auth">
+              <Button variant="ghost" className="gap-2">
+                <User className="h-4 w-4" />
+                Iniciar Sesión
+              </Button>
+            </Link>
+          )}
+        </div>
       </div>
     </header>
   );
