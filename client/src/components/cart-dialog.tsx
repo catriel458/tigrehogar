@@ -1,7 +1,10 @@
 
+import { useState } from "react";
 import { ShoppingCart } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { useCart } from "@/hooks/use-cart";
+import { useToast } from "@/hooks/use-toast";
+import { Input } from "@/components/ui/input";
 import {
   Sheet,
   SheetContent,
