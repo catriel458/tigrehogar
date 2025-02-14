@@ -14,6 +14,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogTrigger,
 } from "@/components/ui/dialog";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -81,7 +82,7 @@ export function CategorySelect({ value, onValueChange }: CategorySelectProps) {
           )}
         </SelectTrigger>
         <SelectContent>
-          {categories.map((category) => (
+          {categories.map((category: Category) => (
             <SelectItem key={category.id} value={category.name}>
               {category.name}
             </SelectItem>
