@@ -19,6 +19,7 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { insertProductSchema, type InsertProduct, type Product } from "@shared/schema";
 import Header from "@/components/layout/header";
 import Footer from "@/components/layout/footer";
+import { useEffect } from "react";
 import { ProtectedRoute } from "@/components/protected-route";
 
 export default function EditProduct() {
@@ -34,7 +35,7 @@ export default function EditProduct() {
       price: 0,
       image: "",
       category: "",
-    }
+    },
   });
 
   const { data: product, isLoading } = useQuery<Product>({
@@ -42,6 +43,7 @@ export default function EditProduct() {
     queryFn: async () => {
       if (!id) throw new Error("No product ID provided");
       const response = await apiRequest<Product>("GET", `/api/products/${id}`);
+      if (!response) throw new Error("Product not found");
       return response;
     },
     enabled: !!id,
@@ -111,7 +113,14 @@ export default function EditProduct() {
               <CardContent>
                 <Form {...form}>
                   <form
-                    onSubmit={form.handleSubmit((data) => mutation.mutate(data))}
+                    onSubmit={form.handleSubmit((data) => {
+                      // Ensure price is in cents
+                      const dataWithPriceInCents = {
+                        ...data,
+                        price: Math.round(data.price * 100)
+                      };
+                      mutation.mutate(dataWithPriceInCents);
+                    })}
                     className="space-y-4"
                   >
                     <FormField
@@ -153,9 +162,10 @@ export default function EditProduct() {
                               type="number"
                               {...field}
                               value={field.value / 100}
-                              onChange={(e) =>
-                                field.onChange(Math.round(parseFloat(e.target.value) * 100))
-                              }
+                              onChange={(e) => {
+                                const value = e.target.value === '' ? 0 : parseFloat(e.target.value);
+                                field.onChange(value);
+                              }}
                             />
                           </FormControl>
                           <FormMessage />

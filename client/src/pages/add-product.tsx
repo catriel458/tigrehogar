@@ -69,7 +69,14 @@ export default function AddProduct() {
             </CardHeader>
             <CardContent>
               <Form {...form}>
-                <form onSubmit={form.handleSubmit((data) => mutation.mutate(data))} className="space-y-4">
+                <form onSubmit={form.handleSubmit((data) => {
+                  // Ensure price is in cents
+                  const dataWithPriceInCents = {
+                    ...data,
+                    price: Math.round(data.price * 100)
+                  };
+                  mutation.mutate(dataWithPriceInCents);
+                })} className="space-y-4">
                   <FormField
                     control={form.control}
                     name="name"
@@ -105,11 +112,14 @@ export default function AddProduct() {
                       <FormItem>
                         <FormLabel>Precio (en pesos)</FormLabel>
                         <FormControl>
-                          <Input
-                            type="number"
+                          <Input 
+                            type="number" 
                             {...field}
                             value={field.value / 100}
-                            onChange={e => field.onChange(Math.round(parseFloat(e.target.value) * 100))}
+                            onChange={(e) => {
+                              const value = e.target.value === '' ? 0 : parseFloat(e.target.value);
+                              field.onChange(value);
+                            }}
                           />
                         </FormControl>
                         <FormMessage />
