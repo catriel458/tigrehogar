@@ -45,9 +45,11 @@ export function registerRoutes(app: Express) {
   });
 
   app.delete("/api/products/:id", async (req, res) => {
-    console.log("Session:", req.session);
-    const user = await storage.getUserById(req.session.userId);
-    if (!user?.isAdmin) {
+    if (!req.session.userId) {
+      return res.status(401).json({ error: "No autenticado" });
+    }
+
+    if (!req.session.isAdmin) {
       return res.status(403).json({ error: "Solo los administradores pueden eliminar productos" });
     }
 
