@@ -35,8 +35,12 @@ export function CategorySelect({ value, onValueChange }: CategorySelectProps) {
   const [newCategory, setNewCategory] = useState("");
   const { toast } = useToast();
 
-  const { data: categories = [], isLoading } = useQuery<Category[]>({
+  const { data: categories = [], isLoading } = useQuery({
     queryKey: ["/api/categories"],
+    queryFn: async () => {
+      const response = await apiRequest("GET", "/api/categories");
+      return response as Category[];
+    },
   });
 
   const createCategoryMutation = useMutation({
@@ -51,14 +55,14 @@ export function CategorySelect({ value, onValueChange }: CategorySelectProps) {
         throw new Error("Esta categoría ya existe");
       }
 
-      return await apiRequest("POST", "/api/categories", { 
+      await apiRequest("POST", "/api/categories", { 
         name: normalizedName 
       });
     },
-    onSuccess: async () => {
+    onSuccess: () => {
       setNewCategory("");
       setIsOpen(false);
-      await queryClient.invalidateQueries({ queryKey: ["/api/categories"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/categories"] });
       toast({
         title: "Categoría creada",
         description: "La categoría ha sido creada exitosamente.",
@@ -86,8 +90,7 @@ export function CategorySelect({ value, onValueChange }: CategorySelectProps) {
     createCategoryMutation.mutate(newCategory);
   };
 
-  // Ordenar categorías alfabéticamente
-  const sortedCategories = [...(categories || [])].sort((a, b) => 
+  const sortedCategories = [...categories].sort((a, b) => 
     a.name.localeCompare(b.name)
   );
 
@@ -102,11 +105,11 @@ export function CategorySelect({ value, onValueChange }: CategorySelectProps) {
               <Checkbox
                 id={`category-${category.id}`}
                 checked={value === category.name}
-                onCheckedChange={(checked) => {
-                  if (checked) {
-                    onValueChange(category.name);
-                  } else {
+                onCheckedChange={() => {
+                  if (value === category.name) {
                     onValueChange("");
+                  } else {
+                    onValueChange(category.name);
                   }
                 }}
               />
