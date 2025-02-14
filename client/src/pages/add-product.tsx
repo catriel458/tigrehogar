@@ -15,7 +15,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { queryClient, apiRequest } from "@/lib/queryClient";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 import { insertProductSchema, type InsertProduct } from "@shared/schema";
 import Header from "@/components/layout/header";
 import Footer from "@/components/layout/footer";
@@ -57,26 +57,26 @@ export default function AddProduct() {
     },
   });
 
-  return (
-    <ProtectedRoute>
-      <div className="min-h-screen flex flex-col">
-        <Header />
+  const onSubmit = form.handleSubmit((data) => {
+    const dataWithPriceInCents = {
+      ...data,
+      price: Math.round(data.price * 100),
+    };
+    mutation.mutate(dataWithPriceInCents);
+  });
 
-        <main className="flex-1 container mx-auto px-4 py-8">
+  return (
+    <div className="min-h-screen flex flex-col">
+      <Header />
+      <main className="flex-1 container mx-auto px-4 py-8">
+        <ProtectedRoute>
           <Card className="max-w-2xl mx-auto">
             <CardHeader>
               <CardTitle>Agregar Nuevo Producto</CardTitle>
             </CardHeader>
             <CardContent>
               <Form {...form}>
-                <form onSubmit={form.handleSubmit((data) => {
-                  // Ensure price is in cents
-                  const dataWithPriceInCents = {
-                    ...data,
-                    price: Math.round(data.price * 100)
-                  };
-                  mutation.mutate(dataWithPriceInCents);
-                })} className="space-y-4">
+                <form onSubmit={onSubmit} className="space-y-4">
                   <FormField
                     control={form.control}
                     name="name"
@@ -162,10 +162,9 @@ export default function AddProduct() {
               </Form>
             </CardContent>
           </Card>
-        </main>
-
-        <Footer />
-      </div>
-    </ProtectedRoute>
+        </ProtectedRoute>
+      </main>
+      <Footer />
+    </div>
   );
 }
