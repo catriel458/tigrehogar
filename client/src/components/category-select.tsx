@@ -25,7 +25,6 @@ interface CategorySelectProps {
   onValueChange: (value: string) => void;
 }
 
-// Función para normalizar el nombre de la categoría
 const normalizeCategory = (name: string): string => {
   return name
     .trim()
@@ -41,7 +40,7 @@ export function CategorySelect({ value, onValueChange }: CategorySelectProps) {
   const [newCategory, setNewCategory] = useState("");
   const { toast } = useToast();
 
-  const { data: categories = [], isLoading } = useQuery<Category[]>({
+  const { data: categories = [], isLoading, refetch } = useQuery<Category[]>({
     queryKey: ["/api/categories"],
   });
 
@@ -58,16 +57,20 @@ export function CategorySelect({ value, onValueChange }: CategorySelectProps) {
         throw new Error("Esta categoría ya existe");
       }
 
-      return await apiRequest<Category>("POST", "/api/categories", { 
+      const response = await apiRequest<Category>("POST", "/api/categories", { 
         name: normalizedName 
       });
+      console.log("API Response:", response);
+      return response;
     },
-    onSuccess: (newCategory) => {
+    onSuccess: async (newCategory) => {
+      console.log("Category created successfully:", newCategory);
       setNewCategory("");
       setIsOpen(false);
 
       // Actualizar la lista de categorías
-      queryClient.invalidateQueries({ queryKey: ["/api/categories"] });
+      await queryClient.invalidateQueries({ queryKey: ["/api/categories"] });
+      await refetch(); // Forzar una recarga inmediata
 
       toast({
         title: "Categoría creada",
@@ -80,6 +83,7 @@ export function CategorySelect({ value, onValueChange }: CategorySelectProps) {
       }
     },
     onError: (error: Error) => {
+      console.error("Error creating category:", error);
       toast({
         title: "Error al crear la categoría",
         description: error.message,
@@ -102,9 +106,11 @@ export function CategorySelect({ value, onValueChange }: CategorySelectProps) {
   };
 
   // Ordenar categorías alfabéticamente
-  const sortedCategories = [...(categories || [])].sort((a, b) => 
+  const sortedCategories = [...categories].sort((a, b) => 
     a.name.localeCompare(b.name)
   );
+
+  console.log("Current categories:", sortedCategories);
 
   return (
     <div className="space-y-2">
@@ -117,7 +123,7 @@ export function CategorySelect({ value, onValueChange }: CategorySelectProps) {
           )}
         </SelectTrigger>
         <SelectContent>
-          {sortedCategories.map((category: Category) => (
+          {sortedCategories.map((category) => (
             <SelectItem key={category.id} value={category.name}>
               {category.name}
             </SelectItem>

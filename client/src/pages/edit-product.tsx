@@ -29,18 +29,29 @@ export default function EditProduct() {
 
   const form = useForm<InsertProduct>({
     resolver: zodResolver(insertProductSchema),
+    defaultValues: {
+      name: "",
+      description: "",
+      price: 0,
+      image: "",
+      category: "",
+    }
   });
 
   const { data: product, isLoading } = useQuery<Product>({
     queryKey: ["/api/products", id],
     queryFn: async () => {
-      return await apiRequest("GET", `/api/products/${id}`);
+      if (!id) return null;
+      const response = await apiRequest<Product>("GET", `/api/products/${id}`);
+      console.log("Product data received:", response);
+      return response;
     },
     enabled: !!id,
   });
 
   useEffect(() => {
     if (product) {
+      console.log("Setting form values with product:", product);
       form.reset({
         name: product.name,
         description: product.description,
@@ -53,7 +64,9 @@ export default function EditProduct() {
 
   const mutation = useMutation({
     mutationFn: async (data: InsertProduct) => {
-      return await apiRequest("PUT", `/api/products/${id}`, data);
+      if (!id) throw new Error("Product ID is required");
+      console.log("Sending update request with data:", data);
+      return await apiRequest<Product>("PUT", `/api/products/${id}`, data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/products"] });
@@ -64,6 +77,7 @@ export default function EditProduct() {
       navigate("/");
     },
     onError: (error: Error) => {
+      console.error("Error updating product:", error);
       toast({
         title: "Error al actualizar",
         description: error.message,
@@ -120,7 +134,10 @@ export default function EditProduct() {
           <CardContent>
             <Form {...form}>
               <form
-                onSubmit={form.handleSubmit((data) => mutation.mutate(data))}
+                onSubmit={form.handleSubmit((data) => {
+                  console.log("Form submitted with data:", data);
+                  mutation.mutate(data);
+                })}
                 className="space-y-4"
               >
                 <FormField
