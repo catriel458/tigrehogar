@@ -36,19 +36,23 @@ export function CategorySelect({ value, onValueChange }: CategorySelectProps) {
 
   const createCategoryMutation = useMutation({
     mutationFn: async (name: string) => {
-      const response = await apiRequest("POST", "/api/categories", { name });
-      return response;
+      return await apiRequest("POST", "/api/categories", { name });
     },
-    onSuccess: (newCategory) => {
+    onSuccess: (category) => {
+      // Invalidar la consulta para refrescar la lista
       queryClient.invalidateQueries({ queryKey: ["/api/categories"] });
+      // Actualizar el valor seleccionado
+      if (category && category.name) {
+        onValueChange(category.name);
+      }
+      // Mostrar mensaje de éxito
       toast({
         title: "Categoría creada",
         description: "La categoría ha sido creada exitosamente.",
       });
-      setIsOpen(false);
+      // Limpiar y cerrar el diálogo
       setNewCategory("");
-      // Seleccionar la nueva categoría automáticamente
-      onValueChange(newCategory.name);
+      setIsOpen(false);
     },
     onError: (error: Error) => {
       toast({

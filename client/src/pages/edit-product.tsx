@@ -20,20 +20,12 @@ import { insertProductSchema, type InsertProduct, type Product } from "@shared/s
 import Header from "@/components/layout/header";
 import Footer from "@/components/layout/footer";
 import { CategorySelect } from "@/components/category-select";
+import { useEffect } from "react";
 
 export default function EditProduct() {
   const { id } = useParams();
   const [, navigate] = useLocation();
   const { toast } = useToast();
-
-  const { data: product, isLoading } = useQuery<Product>({
-    queryKey: ["/api/products", id],
-    queryFn: async () => {
-      const response = await apiRequest("GET", `/api/products/${id}`);
-      if (!response) throw new Error("Producto no encontrado");
-      return response;
-    },
-  });
 
   const form = useForm<InsertProduct>({
     resolver: zodResolver(insertProductSchema),
@@ -44,14 +36,29 @@ export default function EditProduct() {
       image: "",
       category: "",
     },
-    values: product ? {
-      name: product.name,
-      description: product.description,
-      price: product.price,
-      image: product.image,
-      category: product.category,
-    } : undefined,
   });
+
+  const { data: product, isLoading } = useQuery<Product>({
+    queryKey: ["/api/products", id],
+    queryFn: async () => {
+      const response = await apiRequest("GET", `/api/products/${id}`);
+      if (!response) throw new Error("Producto no encontrado");
+      return response;
+    },
+  });
+
+  // Actualizar el formulario cuando se carga el producto
+  useEffect(() => {
+    if (product) {
+      form.reset({
+        name: product.name,
+        description: product.description,
+        price: product.price,
+        image: product.image,
+        category: product.category,
+      });
+    }
+  }, [product, form]);
 
   const mutation = useMutation({
     mutationFn: async (data: InsertProduct) => {
@@ -92,7 +99,6 @@ export default function EditProduct() {
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
-
       <main className="flex-1 container mx-auto px-4 py-8">
         <Card className="max-w-2xl mx-auto">
           <CardHeader>
@@ -100,7 +106,10 @@ export default function EditProduct() {
           </CardHeader>
           <CardContent>
             <Form {...form}>
-              <form onSubmit={form.handleSubmit((data) => mutation.mutate(data))} className="space-y-4">
+              <form
+                onSubmit={form.handleSubmit((data) => mutation.mutate(data))}
+                className="space-y-4"
+              >
                 <FormField
                   control={form.control}
                   name="name"
@@ -140,7 +149,9 @@ export default function EditProduct() {
                           type="number"
                           {...field}
                           value={field.value / 100}
-                          onChange={e => field.onChange(Math.round(parseFloat(e.target.value) * 100))}
+                          onChange={(e) =>
+                            field.onChange(Math.round(parseFloat(e.target.value) * 100))
+                          }
                         />
                       </FormControl>
                       <FormMessage />
@@ -179,7 +190,11 @@ export default function EditProduct() {
                   )}
                 />
 
-                <Button type="submit" className="w-full" disabled={mutation.isPending}>
+                <Button
+                  type="submit"
+                  className="w-full"
+                  disabled={mutation.isPending}
+                >
                   {mutation.isPending ? "Actualizando..." : "Actualizar Producto"}
                 </Button>
               </form>
@@ -187,7 +202,6 @@ export default function EditProduct() {
           </CardContent>
         </Card>
       </main>
-
       <Footer />
     </div>
   );
