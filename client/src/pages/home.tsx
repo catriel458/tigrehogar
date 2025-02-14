@@ -1,3 +1,4 @@
+
 import { useQuery } from "@tanstack/react-query";
 import Header from "@/components/layout/header";
 import Footer from "@/components/layout/footer";
@@ -17,11 +18,19 @@ export default function Home() {
       <main className="flex-1">
         <section className="container mx-auto px-4 py-8">
           <h1 className="text-4xl font-serif text-center mb-8">
-            Welcome to Casa Comfort
+            Bienvenidos a Casa Comfort
           </h1>
           <p className="text-center text-lg mb-12 text-muted-foreground">
-            Making your house feel like home, one comfort at a time
+            Tu tienda de confianza en Zona Norte para artículos del hogar y más
           </p>
+
+          <div className="mb-12">
+            <img 
+              src="https://www.tigre.gob.ar/public/assets/fotos_novedades/1582895164.jpg"
+              alt="Municipio de Tigre"
+              className="w-full max-h-[400px] object-cover rounded-lg"
+            />
+          </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {isLoading ? (

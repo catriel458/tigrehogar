@@ -1,4 +1,5 @@
 import { Link } from "wouter";
+import { useCart } from "@/hooks/use-cart";
 import { Button } from "@/components/ui/button";
 import { Home, PlusCircle, User } from "lucide-react";
 import { CartDialog } from "@/components/cart-dialog";
@@ -12,6 +13,7 @@ import {
 
 export default function Header() {
   const { user, logoutMutation } = useAuth();
+  const { items } = useCart();
 
   return (
     <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -24,7 +26,14 @@ export default function Header() {
         </Link>
 
         <div className="flex items-center space-x-4">
-          <CartDialog />
+          <div className="relative">
+            <CartDialog />
+            {items.length > 0 && (
+              <span className="absolute -top-2 -right-2 bg-primary text-primary-foreground w-5 h-5 rounded-full flex items-center justify-center text-xs">
+                {items.reduce((total, item) => total + item.quantity, 0)}
+              </span>
+            )}
+          </div>
           {user?.isAdmin && (
             <Link href="/add-product">
               <Button variant="ghost" className="gap-2">
