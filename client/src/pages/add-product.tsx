@@ -39,15 +39,21 @@ export default function AddProduct() {
   const mutation = useMutation({
     mutationFn: async (data: InsertProduct) => {
       const formData = new FormData();
-      Object.entries(data).forEach(([key, value]) => {
-        if (key === "image" && value instanceof File) {
-          formData.append("image", value);
-        } else if (key === "image" && typeof value === "string") {
-          formData.append("imageUrl", value);
-        } else {
-          formData.append(key, String(value));
-        }
-      });
+      formData.append("name", data.name);
+      formData.append("description", data.description);
+      formData.append("price", String(data.price));
+      formData.append("category", data.category);
+
+      if (data.image instanceof File) {
+        formData.append("image", data.image);
+      } else {
+        formData.append("imageUrl", data.image as string);
+      }
+
+      console.log("FormData entries:");
+      for (let [key, value] of formData.entries()) {
+        console.log(`${key}: ${value instanceof File ? value.name : value}`);
+      }
 
       return apiRequest(
         "POST",
@@ -163,7 +169,7 @@ export default function AddProduct() {
                     <FormField
                       control={form.control}
                       name="image"
-                      render={({ field: { onChange, value, ...field } }) => (
+                      render={({ field }) => (
                         <FormItem>
                           <FormLabel>Subir Imagen</FormLabel>
                           <FormControl>
@@ -173,10 +179,10 @@ export default function AddProduct() {
                               onChange={(e) => {
                                 const file = e.target.files?.[0];
                                 if (file) {
-                                  onChange(file);
+                                  console.log("Selected file:", file.name);
+                                  field.onChange(file);
                                 }
                               }}
-                              {...field}
                             />
                           </FormControl>
                           <FormDescription>
