@@ -38,7 +38,7 @@ export default function EditProduct() {
     },
   });
 
-  const { data: product, isLoading } = useQuery({
+  const { data, isLoading } = useQuery({
     queryKey: ["/api/products", id],
     enabled: !!id,
     queryFn: async () => {
@@ -48,16 +48,16 @@ export default function EditProduct() {
   });
 
   useEffect(() => {
-    if (product) {
+    if (data) {
       form.reset({
-        name: product.name,
-        description: product.description,
-        price: product.price,
-        image: product.image,
-        category: product.category,
+        name: data.name,
+        description: data.description,
+        price: data.price,
+        image: data.image,
+        category: data.category,
       });
     }
-  }, [product, form]);
+  }, [data, form]);
 
   const mutation = useMutation({
     mutationFn: async (data: InsertProduct) => {
@@ -95,7 +95,7 @@ export default function EditProduct() {
     );
   }
 
-  if (!product) {
+  if (!data) {
     return (
       <div className="min-h-screen flex flex-col">
         <Header />

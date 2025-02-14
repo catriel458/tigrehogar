@@ -14,7 +14,6 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -30,19 +29,20 @@ export function CategorySelect({ value, onValueChange }: CategorySelectProps) {
   const [newCategory, setNewCategory] = useState("");
   const { toast } = useToast();
 
-  const { data: categories = [], isLoading } = useQuery<Category[]>({
+  const { data: categories = [], isLoading } = useQuery({
     queryKey: ["/api/categories"],
   });
 
   const createCategoryMutation = useMutation({
     mutationFn: async (name: string) => {
-      return await apiRequest<Category>("POST", "/api/categories", { name });
+      const response = await apiRequest<Category>("POST", "/api/categories", { name });
+      return response;
     },
-    onSuccess: (category) => {
+    onSuccess: (newCategory) => {
       setNewCategory("");
       setIsOpen(false);
 
-      // Actualizar la lista de categorías
+      // Invalidar la caché y forzar una recarga
       queryClient.invalidateQueries({ queryKey: ["/api/categories"] });
 
       toast({
@@ -50,9 +50,9 @@ export function CategorySelect({ value, onValueChange }: CategorySelectProps) {
         description: "La categoría ha sido creada exitosamente.",
       });
 
-      // Seleccionar la nueva categoría
-      if (category && category.name) {
-        onValueChange(category.name);
+      // Seleccionar la nueva categoría si existe
+      if (newCategory && newCategory.name) {
+        onValueChange(newCategory.name);
       }
     },
     onError: (error: Error) => {
