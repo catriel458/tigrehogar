@@ -33,6 +33,11 @@ export function ProductFilters({ products, onFilterChange }: ProductFiltersProps
       const max = Math.max(...products.map((p) => p.price));
       setMaxPrice(max);
       setPriceRange([0, max]);
+      // Trigger initial filter with the correct price range
+      onFilterChange({
+        category: selectedCategory,
+        priceRange: [0, max],
+      });
     }
   }, [products]);
 

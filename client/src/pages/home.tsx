@@ -28,7 +28,7 @@ export default function Home() {
     priceRange: [number, number];
   }>({
     category: null,
-    priceRange: [0, 1000000],
+    priceRange: [0, Math.max(...products.map(p => p.price || 0), 1000000)], //Added || 0 to handle potential undefined prices
   });
 
   const filteredProducts = products.filter((product) => {
