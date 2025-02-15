@@ -9,6 +9,7 @@ import AddProduct from "@/pages/add-product";
 import AuthPage from "@/pages/auth";
 import VerifyEmail from "@/pages/verify-email";
 import ProfilePage from "@/pages/profile";
+import ResetPassword from "@/pages/reset-password";
 import { ProtectedRoute } from "@/components/protected-route";
 import EditProduct from "@/pages/edit-product";
 
@@ -18,6 +19,7 @@ function Router() {
       <Route path="/" component={Home} />
       <Route path="/auth" component={AuthPage} />
       <Route path="/verify-email" component={VerifyEmail} />
+      <Route path="/reset-password" component={ResetPassword} />
       <ProtectedRoute path="/profile" component={ProfilePage} />
       <ProtectedRoute path="/add-product" component={AddProduct} />
       <Route path="/edit-product/:id" component={EditProduct} />
