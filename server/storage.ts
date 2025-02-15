@@ -17,6 +17,7 @@ export interface IStorage {
   getUserById(id: number): Promise<User | undefined>;
   verifyEmail(token: string): Promise<boolean>;
   updateUser(id: number, data: Partial<User>): Promise<User>;
+  updateUserPassword(id: number, hashedPassword: string): Promise<boolean>;
   setResetToken(email: string): Promise<string | undefined>;
   resetPassword(token: string, newPassword: string): Promise<boolean>;
 }
@@ -100,6 +101,15 @@ export class DatabaseStorage implements IStorage {
       .where(eq(users.id, id))
       .returning();
     return user;
+  }
+
+  async updateUserPassword(id: number, hashedPassword: string): Promise<boolean> {
+    const [user] = await db
+      .update(users)
+      .set({ password: hashedPassword })
+      .where(eq(users.id, id))
+      .returning();
+    return !!user;
   }
 
   async setResetToken(email: string): Promise<string | undefined> {

@@ -233,6 +233,39 @@ export function setupAuth(app: Express) {
     }
   });
 
+  // Add change password route for authenticated users
+  app.post("/api/users/change-password", async (req, res) => {
+    if (!req.session.userId) {
+      return res.status(401).json({ error: "Not authenticated" });
+    }
+
+    try {
+      const { currentPassword, newPassword } = req.body;
+
+      const user = await storage.getUserById(req.session.userId);
+      if (!user) {
+        return res.status(404).json({ error: "Usuario no encontrado" });
+      }
+
+      // Verify current password
+      const validPassword = await comparePasswords(currentPassword, user.password);
+      if (!validPassword) {
+        return res.status(400).json({ error: "La contraseña actual es incorrecta" });
+      }
+
+      // Hash new password
+      const hashedPassword = await hashPassword(newPassword);
+
+      // Update password in database
+      await storage.updateUserPassword(user.id, hashedPassword);
+
+      res.json({ message: "Contraseña actualizada exitosamente" });
+    } catch (error) {
+      console.error("Error changing password:", error);
+      res.status(500).json({ error: "Error al cambiar la contraseña" });
+    }
+  });
+
   // Middleware to check if user is authenticated
   app.use("/api/protected", (req, res, next) => {
     if (!req.session.userId) {
