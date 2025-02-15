@@ -264,7 +264,7 @@ export default function AuthPage() {
       </div>
       <div className="hidden md:block bg-primary/5 p-8">
         <div className="h-full flex flex-col items-center justify-center max-w-lg mx-auto space-y-8">
-          <h2 className="text-4xl font-serif">Casa Comfort</h2>
+          <h2 className="text-4xl font-serif">Tigre Hogar</h2>
           <p className="text-center text-muted-foreground">
             Tu destino para encontrar los mejores productos para el hogar.
             Regístrate para acceder a ofertas exclusivas y guardar tus productos
