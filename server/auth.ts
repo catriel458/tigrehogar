@@ -4,6 +4,10 @@ import { insertUserSchema, type InsertUser } from "@shared/schema";
 import bcrypt from "bcryptjs";
 import nodemailer from "nodemailer";
 
+const APP_URL = process.env.NODE_ENV === 'production' 
+  ? 'https://tigrehogar.replit.app'
+  : 'http://localhost:3000';
+
 const transporter = nodemailer.createTransport({
   host: "smtp.gmail.com",
   port: 587,
@@ -24,32 +28,32 @@ async function comparePasswords(password: string, hashedPassword: string): Promi
 }
 
 async function sendVerificationEmail(email: string, token: string) {
-  const verificationUrl = `${process.env.APP_URL}/verify-email?token=${token}`;
+  const verificationUrl = `${APP_URL}/verify-email?token=${token}`;
 
   await transporter.sendMail({
     from: process.env.EMAIL_USER,
     to: email,
-    subject: "Verify your email",
+    subject: "Verifica tu email - Tigre Hogar",
     html: `
-      <h1>Welcome to Tigre Hogar!</h1>
-      <p>Please click the link below to verify your email address:</p>
+      <h1>¡Bienvenido a Tigre Hogar!</h1>
+      <p>Por favor haz clic en el siguiente enlace para verificar tu dirección de email:</p>
       <a href="${verificationUrl}">${verificationUrl}</a>
     `,
   });
 }
 
 async function sendPasswordResetEmail(email: string, token: string) {
-  const resetUrl = `${process.env.APP_URL}/reset-password?token=${token}`;
+  const resetUrl = `${APP_URL}/reset-password?token=${token}`;
 
   await transporter.sendMail({
     from: process.env.EMAIL_USER,
     to: email,
-    subject: "Reset your password",
+    subject: "Restablecer contraseña - Tigre Hogar",
     html: `
-      <h1>Password Reset Request</h1>
-      <p>Click the link below to reset your password:</p>
+      <h1>Solicitud de restablecimiento de contraseña</h1>
+      <p>Haz clic en el siguiente enlace para restablecer tu contraseña:</p>
       <a href="${resetUrl}">${resetUrl}</a>
-      <p>This link will expire in 1 hour.</p>
+      <p>Este enlace expirará en 1 hora.</p>
     `,
   });
 }
