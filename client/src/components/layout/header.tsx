@@ -23,7 +23,7 @@ export default function Header() {
         <Link href="/">
           <a className="flex items-center space-x-2">
             <Home className="h-5 w-5" />
-            <span className="font-serif text-lg">Casa Comfort</span>
+            <span className="font-serif text-lg">Tigre Hogar</span>
           </a>
         </Link>
 
