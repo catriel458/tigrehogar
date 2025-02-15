@@ -4,9 +4,8 @@ import { insertUserSchema, type InsertUser } from "@shared/schema";
 import bcrypt from "bcryptjs";
 import nodemailer from "nodemailer";
 
-const APP_URL = process.env.NODE_ENV === 'production' 
-  ? 'https://tigrehogar.replit.app'
-  : 'http://localhost:3000';
+// Usar directamente la URL de producción
+const APP_URL = 'https://tigrehogar.replit.app';
 
 const transporter = nodemailer.createTransport({
   host: "smtp.gmail.com",
