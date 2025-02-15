@@ -51,7 +51,7 @@ export default function Home() {
       <main className="flex-1">
         <section className="container mx-auto px-4 py-8">
           <h1 className="text-4xl font-serif text-center mb-8">
-            Bienvenidos a Casa Comfort
+            Bienvenidos a Tigre Hogar
           </h1>
           <p className="text-center text-lg mb-12 text-muted-foreground">
             Tu tienda de confianza en Zona Norte para artículos del hogar, vestimenta y mucho más

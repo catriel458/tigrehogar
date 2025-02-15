@@ -1,4 +1,3 @@
-
 import { Card, CardContent } from "@/components/ui/card";
 import { Heart, Shield, Truck } from "lucide-react";
 
@@ -7,7 +6,7 @@ export default function AboutSection() {
     <section className="bg-primary/5 py-16">
       <div className="container mx-auto px-4">
         <div className="max-w-3xl mx-auto text-center mb-12">
-          <h2 className="font-serif text-3xl mb-4">Sobre Casa Comfort</h2>
+          <h2 className="font-serif text-3xl mb-4">Sobre Tigre Hogar</h2>
           <p className="text-muted-foreground">
             Somos tu tienda de confianza en Tigre, ofreciendo una cuidadosa selección de 
             artículos para el hogar, ropa y más. Nuestro compromiso es brindarte productos 

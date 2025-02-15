@@ -1,4 +1,3 @@
-
 import { SiInstagram, SiFacebook, SiPinterest, SiX } from "react-icons/si";
 
 export default function Footer() {
@@ -6,7 +5,7 @@ export default function Footer() {
     <footer className="bg-primary/5 border-t">
       <div className="container mx-auto px-4 py-8">
         <div className="flex flex-col items-center space-y-4">
-          <h2 className="font-serif text-2xl">Casa Comfort</h2>
+          <h2 className="font-serif text-2xl">Tigre Hogar</h2>
           <p className="text-muted-foreground text-center">
             Haciendo de tu casa un hogar, con todo el confort que necesitas
           </p>
@@ -27,7 +26,7 @@ export default function Footer() {
           </div>
 
           <p className="text-sm text-muted-foreground">
-            © {new Date().getFullYear()} Casa Comfort. Todos los derechos reservados.
+            © {new Date().getFullYear()} Tigre Hogar. Todos los derechos reservados.
           </p>
         </div>
       </div>

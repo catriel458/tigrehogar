@@ -31,7 +31,7 @@ async function sendVerificationEmail(email: string, token: string) {
     to: email,
     subject: "Verify your email",
     html: `
-      <h1>Welcome to Casa Comfort!</h1>
+      <h1>Welcome to Tigre Hogar!</h1>
       <p>Please click the link below to verify your email address:</p>
       <a href="${verificationUrl}">${verificationUrl}</a>
     `,

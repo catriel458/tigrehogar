@@ -76,7 +76,7 @@ export default function AuthPage() {
       <div className="flex items-center justify-center p-8">
         <Card className="w-full max-w-md">
           <CardHeader>
-            <CardTitle>Bienvenido a Casa Comfort</CardTitle>
+            <CardTitle>Bienvenido a Tigre Hogar</CardTitle>
             <CardDescription>
               Inicia sesión o crea una cuenta para continuar
             </CardDescription>
@@ -147,8 +147,8 @@ export default function AuthPage() {
                           <FormItem>
                             <FormLabel>Usuario</FormLabel>
                             <FormControl>
-                              <Input 
-                                {...field} 
+                              <Input
+                                {...field}
                                 placeholder="Ingresa tu usuario"
                                 autoComplete="username"
                               />
@@ -164,9 +164,9 @@ export default function AuthPage() {
                           <FormItem>
                             <FormLabel>Contraseña</FormLabel>
                             <FormControl>
-                              <Input 
-                                type="password" 
-                                {...field} 
+                              <Input
+                                type="password"
+                                {...field}
                                 placeholder="Ingresa tu contraseña"
                                 autoComplete="current-password"
                               />
@@ -236,9 +236,9 @@ export default function AuthPage() {
                           <FormItem>
                             <FormLabel>Contraseña</FormLabel>
                             <FormControl>
-                              <Input 
-                                type="password" 
-                                {...field} 
+                              <Input
+                                type="password"
+                                {...field}
                                 placeholder="Elige una contraseña"
                                 autoComplete="new-password"
                               />
