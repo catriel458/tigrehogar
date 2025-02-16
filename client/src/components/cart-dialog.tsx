@@ -23,6 +23,8 @@ export function CartDialog() {
     celular: ''
   });
 
+  const totalItems = items.reduce((total, item) => total + item.quantity, 0);
+
   const handleCheckout = () => {
     if (!checkoutData.nombre || !checkoutData.apellido || !checkoutData.celular) {
       toast({
@@ -61,9 +63,9 @@ Me gustaría coordinar la entrega y el método de pago (efectivo o Mercado Pago)
       <SheetTrigger asChild>
         <Button variant="ghost" size="icon" className="relative">
           <ShoppingCart className="h-5 w-5" />
-          {items.length > 0 && (
+          {totalItems > 0 && (
             <span className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-primary text-[10px] font-medium text-primary-foreground flex items-center justify-center">
-              {items.length}
+              {totalItems}
             </span>
           )}
         </Button>
