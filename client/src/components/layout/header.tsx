@@ -17,11 +17,19 @@ import { Separator } from "@/components/ui/separator";
 
 export default function Header() {
   const { user, logoutMutation } = useAuth();
-  const { items } = useCart();
+  const { items, clearCart } = useCart();
   const { theme, setTheme } = useTheme();
   const isMobile = useIsMobile();
 
   const cartItemCount = items.reduce((total, item) => total + item.quantity, 0);
+
+  const handleLogout = () => {
+    logoutMutation.mutate(undefined, {
+      onSuccess: () => {
+        clearCart();
+      }
+    });
+  };
 
   const DesktopMenu = () => (
     <div className="flex items-center space-x-4">
@@ -72,7 +80,7 @@ export default function Header() {
             </Link>
             <DropdownMenuItem
               className="text-destructive cursor-pointer"
-              onClick={() => logoutMutation.mutate()}
+              onClick={handleLogout}
             >
               Cerrar Sesión
             </DropdownMenuItem>
@@ -145,7 +153,7 @@ export default function Header() {
                   <Button
                     variant="ghost"
                     className="w-full justify-start gap-2 text-destructive"
-                    onClick={() => logoutMutation.mutate()}
+                    onClick={handleLogout}
                   >
                     Cerrar Sesión
                   </Button>
