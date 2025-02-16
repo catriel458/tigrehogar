@@ -118,14 +118,7 @@ export default function Header() {
                   Cambiar tema
                 </Button>
 
-                <div className="relative">
-                  <CartDialog />
-                  {cartItemCount > 0 && (
-                    <span className="absolute top-1 right-1 bg-primary text-primary-foreground w-5 h-5 rounded-full flex items-center justify-center text-xs">
-                      {cartItemCount}
-                    </span>
-                  )}
-                </div>
+                <CartDialog />
 
                 {user?.isAdmin && (
                   <Link href="/add-product">
