@@ -59,56 +59,65 @@ Me gustaría coordinar la entrega y el método de pago (efectivo o Mercado Pago)
   return (
     <Sheet>
       <SheetTrigger asChild>
-        <Button variant="ghost" className="relative">
+        <Button variant="ghost" size="icon" className="relative">
           <ShoppingCart className="h-5 w-5" />
           {items.length > 0 && (
-            <span className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-primary text-[10px] font-medium text-primary-foreground">
+            <span className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-primary text-[10px] font-medium text-primary-foreground flex items-center justify-center">
               {items.length}
             </span>
           )}
         </Button>
       </SheetTrigger>
-      <SheetContent>
-        <SheetHeader>
+      <SheetContent side="right" className="w-full sm:max-w-md">
+        <SheetHeader className="space-y-2.5">
           <SheetTitle>Carrito de compras</SheetTitle>
+          {items.length === 0 && (
+            <SheetDescription>Tu carrito está vacío</SheetDescription>
+          )}
         </SheetHeader>
 
-        {items.length === 0 ? (
-          <SheetDescription>Tu carrito está vacío</SheetDescription>
-        ) : (
-          <div className="flex flex-col h-full">
+        {items.length > 0 && (
+          <div className="flex flex-col h-[calc(100vh-8rem)] mt-6">
             {/* Lista scrollable de productos */}
-            <div className="flex-1 overflow-auto pr-4 -mr-4">
-              <div className="space-y-4">
+            <div className="flex-1 overflow-auto -mr-6 pr-6">
+              <div className="space-y-6">
                 {items.map((item) => (
-                  <div key={item.id} className="flex gap-4 items-center border-b pb-4">
-                    <img src={item.image} alt={item.name} className="w-20 h-20 object-cover rounded" />
-                    <div className="flex-1">
-                      <p className="font-medium">{item.name}</p>
-                      <p className="text-sm text-muted-foreground">
+                  <div key={item.id} className="flex gap-4 items-start pb-6 border-b">
+                    <img 
+                      src={item.image} 
+                      alt={item.name} 
+                      className="w-24 h-24 object-cover rounded-lg flex-shrink-0"
+                    />
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium truncate">{item.name}</p>
+                      <p className="text-sm text-muted-foreground mt-1">
                         ${item.price/100} c/u
                       </p>
-                      <div className="flex items-center gap-2 mt-2">
-                        <Button
-                          variant="outline"
-                          size="icon"
-                          onClick={() => decrementItem(item.id)}
-                        >
-                          <Minus className="h-4 w-4" />
-                        </Button>
-                        <span>{item.quantity}</span>
-                        <Button
-                          variant="outline"
-                          size="icon"
-                          onClick={() => addItem(item)}
-                        >
-                          <Plus className="h-4 w-4" />
-                        </Button>
+                      <div className="flex items-center gap-3 mt-3">
+                        <div className="flex items-center gap-2">
+                          <Button
+                            variant="outline"
+                            size="icon"
+                            className="h-8 w-8"
+                            onClick={() => decrementItem(item.id)}
+                          >
+                            <Minus className="h-3 w-3" />
+                          </Button>
+                          <span className="w-8 text-center">{item.quantity}</span>
+                          <Button
+                            variant="outline"
+                            size="icon"
+                            className="h-8 w-8"
+                            onClick={() => addItem(item)}
+                          >
+                            <Plus className="h-3 w-3" />
+                          </Button>
+                        </div>
                         <Button
                           variant="ghost"
                           size="sm"
                           onClick={() => removeItem(item.id)}
-                          className="ml-2"
+                          className="text-sm h-8"
                         >
                           Eliminar
                         </Button>
@@ -120,8 +129,8 @@ Me gustaría coordinar la entrega y el método de pago (efectivo o Mercado Pago)
             </div>
 
             {/* Sección fija con el total y botones */}
-            <div className="pt-4 border-t mt-4 space-y-4">
-              <div className="font-medium">Total: ${total/100}</div>
+            <div className="pt-6 border-t mt-6 space-y-4">
+              <div className="font-medium text-lg">Total: ${total/100}</div>
 
               <div className="space-y-4">
                 <Input
@@ -145,7 +154,7 @@ Me gustaría coordinar la entrega y el método de pago (efectivo o Mercado Pago)
                 </p>
               </div>
 
-              <div className="space-y-2">
+              <div className="space-y-2.5">
                 <Button onClick={handleCheckout} className="w-full">
                   Contactar por WhatsApp
                 </Button>
