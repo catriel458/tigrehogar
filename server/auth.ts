@@ -5,7 +5,7 @@ import bcrypt from "bcryptjs";
 import nodemailer from "nodemailer";
 
 // Usar directamente la URL de producción
-const APP_URL = 'https://tigrehogar.replit.app';
+const APP_URL = 'https://tigrehogar-eyvc.onrender.com/';
 
 const transporter = nodemailer.createTransport({
   host: "smtp.gmail.com",
