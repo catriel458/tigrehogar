@@ -1,8 +1,12 @@
-import { Express } from "express";
+import { Express, Request } from "express";
 import { storage } from "./storage";
 import { insertUserSchema, type InsertUser } from "@shared/schema";
 import bcrypt from "bcryptjs";
 import nodemailer from "nodemailer";
+import dotenv from 'dotenv';
+
+dotenv.config();
+
 
 const transporter = nodemailer.createTransport({
   host: "smtp.gmail.com",
@@ -24,7 +28,7 @@ async function comparePasswords(password: string, hashedPassword: string): Promi
 }
 
 async function sendVerificationEmail(email: string, token: string) {
-  const verificationUrl = `${APP_URL}/verify-email?token=${token}`;
+  const verificationUrl = `${process.env.APP_URL}/verify-email?token=${token}`;
 
   await transporter.sendMail({
     from: process.env.EMAIL_USER,
@@ -39,7 +43,7 @@ async function sendVerificationEmail(email: string, token: string) {
 }
 
 async function sendPasswordResetEmail(email: string, token: string) {
-  const resetUrl = `${APP_URL}/reset-password?token=${token}`;
+  const resetUrl = `${process.env.APP_URL}/reset-password?token=${token}`;
 
   await transporter.sendMail({
     from: process.env.EMAIL_USER,
@@ -52,6 +56,13 @@ async function sendPasswordResetEmail(email: string, token: string) {
       <p>Este enlace expirará en 1 hora.</p>
     `,
   });
+}
+
+declare module "express-session" {
+  interface SessionData {
+    userId: string;
+    isAdmin: boolean;
+  }
 }
 
 export function setupAuth(app: Express) {
@@ -135,8 +146,14 @@ export function setupAuth(app: Express) {
       // Create session with admin status
       const isAdmin = user.username === 'admin1234' || user.isAdmin;
 
-      req.session.userId = user.id;
-      req.session.isAdmin = isAdmin;
+      req.session.regenerate((err) => {
+        if (err) {
+          console.error("Error regenerating session:", err);
+          throw err;
+        }
+        req.session.userId = user.id.toString();
+        req.session.isAdmin = isAdmin ?? false;
+      });
 
       await new Promise<void>((resolve, reject) => {
         req.session.save((err) => {
@@ -236,10 +253,12 @@ export function setupAuth(app: Express) {
       return res.status(401).json({ error: "Not authenticated" });
     }
 
+    const userId = parseInt(req.session.userId);
+
     try {
       const { currentPassword, newPassword } = req.body;
 
-      const user = await storage.getUserById(req.session.userId);
+      const user = await storage.getUserById(parseInt(req.session.id));
       if (!user) {
         return res.status(404).json({ error: "Usuario no encontrado" });
       }
@@ -253,8 +272,10 @@ export function setupAuth(app: Express) {
       // Hash new password
       const hashedPassword = await hashPassword(newPassword);
 
+      const userId = parseInt(req.session.id);
+
       // Update password in database
-      await storage.updateUserPassword(user.id, hashedPassword);
+      await storage.updateUserPassword(userId, hashedPassword);
 
       res.json({ message: "Contraseña actualizada exitosamente" });
     } catch (error) {
@@ -265,7 +286,7 @@ export function setupAuth(app: Express) {
 
   // Middleware to check if user is authenticated
   app.use("/api/protected", (req, res, next) => {
-    if (!req.session.userId) {
+    if (!req.session.id) {
       return res.status(401).json({ error: "Unauthorized" });
     }
     next();
@@ -273,12 +294,13 @@ export function setupAuth(app: Express) {
 
   // Get current user
   app.get("/api/me", async (req, res) => {
-    if (!req.session.userId) {
+    if (!req.session.id) {
       return res.status(401).json({ error: "Not authenticated" });
     }
 
     try {
-      const user = await storage.getUserById(req.session.userId);
+      const userId = parseInt(req.session.id);
+      const user = await storage.getUserById(userId);
       if (!user) {
         return res.status(404).json({ error: "User not found" });
       }

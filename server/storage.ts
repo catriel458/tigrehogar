@@ -1,7 +1,12 @@
 import { products, users, type Product, type InsertProduct, type User, type InsertUser } from "@shared/schema";
-import { db } from "./db";
 import { eq } from "drizzle-orm";
 import { randomBytes } from "crypto";
+import { drizzle } from "drizzle-orm/better-sqlite3";
+import Database from "better-sqlite3";
+
+// Configurar conexión a SQLite
+const sqlite = new Database("./data/database.sqlite");
+const db = drizzle(sqlite);
 
 export interface IStorage {
   getProducts(): Promise<Product[]>;
@@ -28,38 +33,38 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getProduct(id: number): Promise<Product | undefined> {
-    const [product] = await db.select().from(products).where(eq(products.id, id));
-    return product;
+    const result = await db.select().from(products).where(eq(products.id, id));
+    return result.length > 0 ? result[0] : undefined;
   }
 
   async createProduct(insertProduct: InsertProduct): Promise<Product> {
-    const [product] = await db
+    const result = await db
       .insert(products)
       .values(insertProduct)
       .returning();
-    return product;
+    return result[0];
   }
 
   async updateProduct(id: number, updateProduct: InsertProduct): Promise<Product | undefined> {
-    const [product] = await db
+    const result = await db
       .update(products)
       .set(updateProduct)
       .where(eq(products.id, id))
       .returning();
-    return product;
+    return result.length > 0 ? result[0] : undefined;
   }
 
   async deleteProduct(id: number): Promise<boolean> {
-    const [product] = await db
+    const result = await db
       .delete(products)
       .where(eq(products.id, id))
       .returning();
-    return !!product;
+    return result.length > 0;
   }
 
   async createUser(insertUser: InsertUser): Promise<User> {
     const verificationToken = randomBytes(32).toString('hex');
-    const [user] = await db
+    const result = await db
       .insert(users)
       .values({
         ...insertUser,
@@ -67,56 +72,56 @@ export class DatabaseStorage implements IStorage {
         emailVerified: false,
       })
       .returning();
-    return user;
+    return result[0];
   }
 
   async getUserByUsername(username: string): Promise<User | undefined> {
-    const [user] = await db.select().from(users).where(eq(users.username, username));
-    return user;
+    const result = await db.select().from(users).where(eq(users.username, username));
+    return result.length > 0 ? result[0] : undefined;
   }
 
   async getUserByEmail(email: string): Promise<User | undefined> {
-    const [user] = await db.select().from(users).where(eq(users.email, email));
-    return user;
+    const result = await db.select().from(users).where(eq(users.email, email));
+    return result.length > 0 ? result[0] : undefined;
   }
 
   async getUserById(id: number): Promise<User | undefined> {
-    const [user] = await db.select().from(users).where(eq(users.id, id));
-    return user;
+    const result = await db.select().from(users).where(eq(users.id, id));
+    return result.length > 0 ? result[0] : undefined;
   }
 
   async verifyEmail(token: string): Promise<boolean> {
-    const [user] = await db
+    const result = await db
       .update(users)
       .set({ emailVerified: true, verificationToken: null })
       .where(eq(users.verificationToken, token))
       .returning();
-    return !!user;
+    return result.length > 0;
   }
 
   async updateUser(id: number, data: Partial<User>): Promise<User> {
-    const [user] = await db
+    const result = await db
       .update(users)
       .set(data)
       .where(eq(users.id, id))
       .returning();
-    return user;
+    return result[0];
   }
 
   async updateUserPassword(id: number, hashedPassword: string): Promise<boolean> {
-    const [user] = await db
+    const result = await db
       .update(users)
       .set({ password: hashedPassword })
       .where(eq(users.id, id))
       .returning();
-    return !!user;
+    return result.length > 0;
   }
 
   async setResetToken(email: string): Promise<string | undefined> {
     const token = randomBytes(32).toString('hex');
-    const expires = new Date(Date.now() + 3600000); // 1 hour
+    const expires = Date.now() + 3600000; 
 
-    const [user] = await db
+    const result = await db
       .update(users)
       .set({
         resetPasswordToken: token,
@@ -125,11 +130,11 @@ export class DatabaseStorage implements IStorage {
       .where(eq(users.email, email))
       .returning();
 
-    return user ? token : undefined;
+    return result.length > 0 ? token : undefined;
   }
 
   async resetPassword(token: string, newPassword: string): Promise<boolean> {
-    const [user] = await db
+    const result = await db
       .update(users)
       .set({
         password: newPassword,
@@ -138,7 +143,7 @@ export class DatabaseStorage implements IStorage {
       })
       .where(eq(users.resetPasswordToken, token))
       .returning();
-    return !!user;
+    return result.length > 0;
   }
 }
 

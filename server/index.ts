@@ -1,3 +1,6 @@
+import dotenv from 'dotenv';
+dotenv.config();
+
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
@@ -5,7 +8,10 @@ import { setupAuth } from "./auth";
 import session from "express-session";
 import createMemoryStore from "memorystore";
 
+const APP_URL = (process.env.NODE_ENV === 'production' ? process.env.APP_URL : import.meta.env.VITE_APP_URL) || 'http://localhost:5000';
 const app = express();
+
+
 
 // Configuración de sesión
 const MemoryStore = createMemoryStore(session);
