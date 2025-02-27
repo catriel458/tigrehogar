@@ -26,9 +26,12 @@ export default function EditProduct() {
   const [, navigate] = useLocation();
   const { toast } = useToast();
   
-  const { data: product } = useQuery({
+  const { data: product } = useQuery<InsertProduct>({
     queryKey: ["/api/products", id],
-    queryFn: () => apiRequest("GET", `/api/products/${id}`),
+    queryFn: async () => {
+      const response = await apiRequest("GET", `/api/products/${id}`);
+      return response.json();
+    },
   });
 
   const form = useForm<InsertProduct>({

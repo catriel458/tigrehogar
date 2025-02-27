@@ -1,6 +1,6 @@
 import { useAuth } from "@/hooks/use-auth";
 import { useLocation } from "wouter";
-import { useEffect } from "react";
+import { useEffect, useCallback } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { insertUserSchema } from "@shared/schema";
@@ -38,7 +38,23 @@ type LoginFormData = z.infer<typeof loginSchema>;
 
 export default function AuthPage() {
   const [, navigate] = useLocation();
-  const { user, loginMutation, registerMutation, forgotPasswordMutation } = useAuth();
+  const { user, loginMutation, registerMutation, forgotPasswordMutation } = useAuth() as { 
+    user: { token?: string } & { 
+      username: string; 
+      password: string; 
+      id: number; 
+      email: string; 
+      isAdmin: boolean | null; 
+      emailVerified: boolean | null; 
+      verificationToken: string | null; 
+      resetPasswordToken: string | null; 
+      resetPasswordExpires: number | null; 
+      createdAt: number | null; 
+    }; 
+    loginMutation: { mutate: (data: any) => void; isPending: boolean; };
+    registerMutation: { mutate: (data: any) => void; isPending: boolean; };
+    forgotPasswordMutation: { mutate: (data: any) => void; isPending: boolean; };
+  };
   const [showForgotPassword, setShowForgotPassword] = useState(false);
 
   // Redirigir si el usuario ya está autenticado
@@ -70,6 +86,33 @@ export default function AuthPage() {
       email: "",
     },
   });
+
+  const handleEditProduct = useCallback(async (productData: { [key: string]: any }) => {
+    if (!user || !user.isAdmin) {
+      console.error("No autenticado o no es administrador");
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/products/1`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${user.token}`, // Assuming user object has a token property
+        },
+        body: JSON.stringify(productData),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error("Error:", errorData.error);
+      } else {
+        console.log("Producto editado con éxito");
+      }
+    } catch (error) {
+      console.error("Error:", error);
+    }
+  }, [user]);
 
   return (
     <div className="min-h-screen grid md:grid-cols-2">

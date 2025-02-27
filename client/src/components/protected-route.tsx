@@ -4,7 +4,7 @@ import { Loader2 } from "lucide-react";
 
 type ProtectedRouteProps = {
   path: string;
-  component: () => JSX.Element;
+  component: () => JSX.Element | null;
 };
 
 export function ProtectedRoute({ path, component: Component }: ProtectedRouteProps) {
