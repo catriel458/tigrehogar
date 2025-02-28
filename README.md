@@ -44,7 +44,7 @@ Puedes acceder a las opciones de administrador con la siguiente cuenta:
 
 Si prefieres acceder al sitio en línea, puedes hacerlo desde su página en Railway:
 
-https://tigrehogar-replit-production-095e.up.railway.app/
+https://tigrehogar.up.railway.app/
 
 ¡Disfruta de la experiencia de Tigre Hogar!
 
