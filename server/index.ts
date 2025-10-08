@@ -2,10 +2,15 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 import express, { type Request, Response, NextFunction } from "express";
+import path from "path";
+import { fileURLToPath } from "url";
 import { registerRoutes } from "./routes";
 import { setupAuth } from "./auth";
 import session from "express-session";
 import createMemoryStore from "memorystore";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
 
@@ -16,11 +21,10 @@ app.use(session({
   resave: false,
   saveUninitialized: false,
   store: new MemoryStore({
-    checkPeriod: 86400000 // prune expired entries every 24h
+    checkPeriod: 86400000
   })
 }));
 
-// Middleware para parsear JSON - debe estar antes de las rutas
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
@@ -29,12 +33,10 @@ app.use((req, res, next) => {
   const start = Date.now();
   const path = req.path;
 
-  // Capturar el body de la request para logging
   if (path.startsWith("/api")) {
     console.log(`${req.method} ${path} Request Body:`, req.body);
   }
 
-  // Interceptar la respuesta para logging
   const originalJson = res.json;
   res.json = function(body) {
     if (path.startsWith("/api")) {
@@ -46,8 +48,7 @@ app.use((req, res, next) => {
   res.on("finish", () => {
     const duration = Date.now() - start;
     if (path.startsWith("/api")) {
-      let logLine = `${req.method} ${path} ${res.statusCode} in ${duration}ms`;
-      console.log(logLine);
+      console.log(`${req.method} ${path} ${res.statusCode} in ${duration}ms`);
     }
   });
 
@@ -57,8 +58,19 @@ app.use((req, res, next) => {
 // Configurar autenticación
 setupAuth(app);
 
-// Configurar rutas
+// Configurar rutas API
 const server = registerRoutes(app);
+
+// Servir archivos estáticos del frontend (después de las rutas API)
+const publicPath = path.join(__dirname, '..', 'public');
+app.use(express.static(publicPath));
+
+// Todas las rutas no-API deben servir index.html (para SPA)
+app.get('*', (req, res) => {
+  if (!req.path.startsWith('/api')) {
+    res.sendFile(path.join(publicPath, 'index.html'));
+  }
+});
 
 // Error handler
 app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
@@ -68,7 +80,6 @@ app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
   res.status(status).json({ error: message });
 });
 
-// Start server
 const PORT = parseInt(process.env.PORT || "5000");
 server.listen(PORT, "0.0.0.0", () => {
   console.log(`Server running on port ${PORT}`);
