@@ -16,30 +16,44 @@ const transporter = nodemailer.createTransport({
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASSWORD,
   },
+  tls: {
+    rejectUnauthorized: false
+  }
 });
 
-async function hashPassword(password: string): Promise<string> {
-  const salt = await bcrypt.genSalt(10);
-  return bcrypt.hash(password, salt);
-}
+// Agrega esto para verificar la conexión al iniciar
+transporter.verify((error, success) => {
+  if (error) {
+    console.error('SMTP Connection Error:', error);
+  } else {
+    console.log('SMTP Server is ready to send emails');
+  }
+});
 
-async function comparePasswords(password: string, hashedPassword: string): Promise<boolean> {
-  return bcrypt.compare(password, hashedPassword);
-}
-
+// Modifica la función sendVerificationEmail:
 async function sendVerificationEmail(email: string, token: string) {
-  const verificationUrl = `${process.env.APP_URL}/verify-email?token=${token}`;
+  try {
+    console.log('Attempting to send email to:', email);
+    console.log('Using SMTP user:', process.env.EMAIL_USER);
+    
+    const verificationUrl = `${process.env.APP_URL}/verify-email?token=${token}`;
 
-  await transporter.sendMail({
-    from: process.env.EMAIL_USER,
-    to: email,
-    subject: "Verifica tu email - Tigre Hogar",
-    html: `
-      <h1>¡Bienvenido a Tigre Hogar!</h1>
-      <p>Por favor haz clic en el siguiente enlace para verificar tu dirección de email:</p>
-      <a href="${verificationUrl}">${verificationUrl}</a>
-    `,
-  });
+    const info = await transporter.sendMail({
+      from: `"Tigre Hogar" <${process.env.EMAIL_USER}>`,
+      to: email,
+      subject: "Verifica tu email - Tigre Hogar",
+      html: `
+        <h1>¡Bienvenido a Tigre Hogar!</h1>
+        <p>Por favor haz clic en el siguiente enlace para verificar tu dirección de email:</p>
+        <a href="${verificationUrl}">${verificationUrl}</a>
+      `,
+    });
+    
+    console.log('Email sent successfully:', info.messageId);
+  } catch (error) {
+    console.error('Failed to send verification email:', error);
+    throw error; // Re-lanza el error para que se maneje en el catch del registro
+  }
 }
 
 async function sendPasswordResetEmail(email: string, token: string) {
