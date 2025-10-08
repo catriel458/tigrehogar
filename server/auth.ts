@@ -1,12 +1,11 @@
 import { Express, Request } from "express";
 import { storage } from "./storage";
 import { insertUserSchema, type InsertUser } from "@shared/schema";
-import bcrypt from "bcryptjs";
+import * as bcrypt from "bcryptjs";
 import nodemailer from "nodemailer";
 import dotenv from 'dotenv';
 
 dotenv.config();
-
 
 const transporter = nodemailer.createTransport({
   host: "smtp.gmail.com",
@@ -21,7 +20,7 @@ const transporter = nodemailer.createTransport({
   }
 });
 
-// Agrega esto para verificar la conexión al iniciar
+// Verificar la conexión al iniciar
 transporter.verify((error, success) => {
   if (error) {
     console.error('SMTP Connection Error:', error);
@@ -30,7 +29,16 @@ transporter.verify((error, success) => {
   }
 });
 
-// Modifica la función sendVerificationEmail:
+// ⭐ AGREGAR ESTAS FUNCIONES QUE FALTAN:
+async function hashPassword(password: string): Promise<string> {
+  const salt = await bcrypt.genSalt(10);
+  return bcrypt.hash(password, salt);
+}
+
+async function comparePasswords(password: string, hashedPassword: string): Promise<boolean> {
+  return bcrypt.compare(password, hashedPassword);
+}
+
 async function sendVerificationEmail(email: string, token: string) {
   try {
     console.log('Attempting to send email to:', email);
@@ -52,7 +60,7 @@ async function sendVerificationEmail(email: string, token: string) {
     console.log('Email sent successfully:', info.messageId);
   } catch (error) {
     console.error('Failed to send verification email:', error);
-    throw error; // Re-lanza el error para que se maneje en el catch del registro
+    throw error;
   }
 }
 
@@ -92,7 +100,6 @@ export function setupAuth(app: Express) {
 
       const { username, email, password } = result.data;
 
-      // Check if user already exists
       const existingUser = await storage.getUserByUsername(username);
       if (existingUser) {
         return res.status(400).json({ error: "Username already taken" });
@@ -103,14 +110,12 @@ export function setupAuth(app: Express) {
         return res.status(400).json({ error: "Email already registered" });
       }
 
-      // Create user with hashed password
       const hashedPassword = await hashPassword(password);
       const user = await storage.createUser({
         ...result.data,
         password: hashedPassword,
       });
 
-      // Send verification email
       if (user.verificationToken) {
         await sendVerificationEmail(email, user.verificationToken);
       }
@@ -138,7 +143,6 @@ export function setupAuth(app: Express) {
     try {
       const { username, password } = req.body;
 
-      // Validar que se proporcionen ambos campos
       if (!username || !password) {
         return res.status(400).json({ error: "Usuario y contraseña son requeridos" });
       }
@@ -157,7 +161,6 @@ export function setupAuth(app: Express) {
         return res.status(401).json({ error: "Usuario o contraseña incorrectos" });
       }
 
-      // Create session with admin status
       const isAdmin = user.username === 'admin1234' || user.isAdmin;
 
       req.session.regenerate((err) => {
@@ -179,7 +182,6 @@ export function setupAuth(app: Express) {
         });
       });
 
-      // Enviar respuesta
       const { password: _, ...userWithoutPassword } = user;
       res.json({
         ...userWithoutPassword,
@@ -261,34 +263,27 @@ export function setupAuth(app: Express) {
     }
   });
 
-  // Add change password route for authenticated users
   app.post("/api/users/change-password", async (req, res) => {
     if (!req.session.userId) {
       return res.status(401).json({ error: "Not authenticated" });
     }
 
-    const userId = parseInt(req.session.userId);
-
     try {
       const { currentPassword, newPassword } = req.body;
-
-      const user = await storage.getUserById(parseInt(req.session.id));
+      
+      const userId = parseInt(req.session.userId);
+      const user = await storage.getUserById(userId);
+      
       if (!user) {
         return res.status(404).json({ error: "Usuario no encontrado" });
       }
 
-      // Verify current password
       const validPassword = await comparePasswords(currentPassword, user.password);
       if (!validPassword) {
         return res.status(400).json({ error: "La contraseña actual es incorrecta" });
       }
 
-      // Hash new password
       const hashedPassword = await hashPassword(newPassword);
-
-      const userId = parseInt(req.session.id);
-
-      // Update password in database
       await storage.updateUserPassword(userId, hashedPassword);
 
       res.json({ message: "Contraseña actualizada exitosamente" });
@@ -298,7 +293,6 @@ export function setupAuth(app: Express) {
     }
   });
 
-  // Middleware to check if user is authenticated
   app.use("/api/protected", (req, res, next) => {
     if (!req.session.id) {
       return res.status(401).json({ error: "Unauthorized" });
@@ -306,7 +300,6 @@ export function setupAuth(app: Express) {
     next();
   });
 
-  // Get current user
   app.get("/api/me", async (req, res) => {
     if (!req.session.id) {
       return res.status(401).json({ error: "Not authenticated" });
