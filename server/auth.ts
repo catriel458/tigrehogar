@@ -2,19 +2,22 @@ import { Express, Request } from "express";
 import { storage } from "./storage";
 import { insertUserSchema, type InsertUser } from "@shared/schema";
 import * as bcrypt from "bcryptjs";
-import { Resend } from 'resend';
+import * as ElasticEmail from '@elasticemail/elasticemail-client';
 import dotenv from 'dotenv';
 
 dotenv.config();
 
-// Inicializar Resend
-const resend = new Resend(process.env.RESEND_API_KEY);
+// Configurar Elastic Email
+const defaultClient = ElasticEmail.ApiClient.instance;
+const apikey = defaultClient.authentications['apikey'];
+apikey.apiKey = process.env.ELASTIC_EMAIL_API_KEY || '';
 
-// Verificar que la API key está configurada
-if (!process.env.RESEND_API_KEY) {
-  console.warn('⚠️ RESEND_API_KEY no está configurada');
+const emailsApi = new ElasticEmail.EmailsApi();
+
+if (!process.env.ELASTIC_EMAIL_API_KEY) {
+  console.warn('⚠️ ELASTIC_EMAIL_API_KEY no está configurada');
 } else {
-  console.log('✅ Resend está configurado correctamente');
+  console.log('✅ Elastic Email está configurado correctamente');
 }
 
 async function hashPassword(password: string): Promise<string> {
@@ -29,62 +32,107 @@ async function comparePasswords(password: string, hashedPassword: string): Promi
 async function sendVerificationEmail(email: string, token: string) {
   try {
     console.log('Attempting to send email to:', email);
-    console.log('Using Resend with from:', process.env.EMAIL_USER);
     
     const verificationUrl = `${process.env.APP_URL}/verify-email?token=${token}`;
 
-    const { data, error } = await resend.emails.send({
-      from: 'Tigre Hogar <onboarding@resend.dev>', // Temporal, luego usarás tu dominio
-      to: email,
-      subject: "Verifica tu email - Tigre Hogar",
-      html: `
-        <h1>¡Bienvenido a Tigre Hogar!</h1>
-        <p>Por favor haz clic en el siguiente enlace para verificar tu dirección de email:</p>
-        <a href="${verificationUrl}" style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px;">Verificar Email</a>
-        <p>O copia este enlace en tu navegador:</p>
-        <p>${verificationUrl}</p>
-      `,
-    });
+    const emailMessageData = {
+      Recipients: [
+        {
+          Email: email
+        }
+      ],
+      Content: {
+        Body: [
+          {
+            ContentType: "HTML",
+            Content: `
+              <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+                <h1 style="color: #333;">¡Bienvenido a Tigre Hogar!</h1>
+                <p style="font-size: 16px; color: #666;">
+                  Por favor haz clic en el siguiente botón para verificar tu dirección de email:
+                </p>
+                <a href="${verificationUrl}" 
+                   style="display: inline-block; padding: 12px 24px; margin: 20px 0; 
+                          background-color: #4CAF50; color: white; text-decoration: none; 
+                          border-radius: 5px; font-weight: bold;">
+                  Verificar Email
+                </a>
+                <p style="font-size: 14px; color: #999;">
+                  O copia este enlace en tu navegador:
+                </p>
+                <p style="font-size: 12px; color: #999; word-break: break-all;">
+                  ${verificationUrl}
+                </p>
+              </div>
+            `
+          }
+        ],
+        From: process.env.EMAIL_USER || 'noreply@tigrehogar.com',
+        Subject: "Verifica tu email - Tigre Hogar"
+      }
+    };
 
-    if (error) {
-      console.error('Resend error:', error);
-      throw new Error(error.message);
-    }
-
-    console.log('✅ Email sent successfully:', data?.id);
-  } catch (error) {
-    console.error('❌ Failed to send verification email:', error);
+    const result = await emailsApi.emailsPost(emailMessageData);
+    console.log('✅ Email sent successfully:', result);
+  } catch (error: any) {
+    console.error('❌ Failed to send verification email:', error.response?.text || error.message || error);
     throw error;
   }
 }
 
 async function sendPasswordResetEmail(email: string, token: string) {
   try {
+    console.log('Sending password reset email to:', email);
+    
     const resetUrl = `${process.env.APP_URL}/reset-password?token=${token}`;
 
-    const { data, error } = await resend.emails.send({
-      from: 'Tigre Hogar <onboarding@resend.dev>',
-      to: email,
-      subject: "Restablecer contraseña - Tigre Hogar",
-      html: `
-        <h1>Solicitud de restablecimiento de contraseña</h1>
-        <p>Haz clic en el siguiente botón para restablecer tu contraseña:</p>
-        <a href="${resetUrl}" style="display: inline-block; padding: 10px 20px; background-color: #2196F3; color: white; text-decoration: none; border-radius: 5px;">Restablecer Contraseña</a>
-        <p>O copia este enlace en tu navegador:</p>
-        <p>${resetUrl}</p>
-        <p><strong>Este enlace expirará en 1 hora.</strong></p>
-        <p>Si no solicitaste este cambio, ignora este email.</p>
-      `,
-    });
+    const emailMessageData = {
+      Recipients: [
+        {
+          Email: email
+        }
+      ],
+      Content: {
+        Body: [
+          {
+            ContentType: "HTML",
+            Content: `
+              <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+                <h1 style="color: #333;">Solicitud de restablecimiento de contraseña</h1>
+                <p style="font-size: 16px; color: #666;">
+                  Haz clic en el siguiente botón para restablecer tu contraseña:
+                </p>
+                <a href="${resetUrl}" 
+                   style="display: inline-block; padding: 12px 24px; margin: 20px 0; 
+                          background-color: #2196F3; color: white; text-decoration: none; 
+                          border-radius: 5px; font-weight: bold;">
+                  Restablecer Contraseña
+                </a>
+                <p style="font-size: 14px; color: #999;">
+                  O copia este enlace en tu navegador:
+                </p>
+                <p style="font-size: 12px; color: #999; word-break: break-all;">
+                  ${resetUrl}
+                </p>
+                <p style="font-size: 14px; color: #e74c3c; margin-top: 20px;">
+                  <strong>Este enlace expirará en 1 hora.</strong>
+                </p>
+                <p style="font-size: 12px; color: #999;">
+                  Si no solicitaste este cambio, ignora este email.
+                </p>
+              </div>
+            `
+          }
+        ],
+        From: process.env.EMAIL_USER || 'noreply@tigrehogar.com',
+        Subject: "Restablecer contraseña - Tigre Hogar"
+      }
+    };
 
-    if (error) {
-      console.error('Resend error:', error);
-      throw new Error(error.message);
-    }
-
-    console.log('✅ Password reset email sent successfully:', data?.id);
-  } catch (error) {
-    console.error('❌ Failed to send password reset email:', error);
+    const result = await emailsApi.emailsPost(emailMessageData);
+    console.log('✅ Password reset email sent successfully:', result);
+  } catch (error: any) {
+    console.error('❌ Failed to send password reset email:', error.response?.text || error.message || error);
     throw error;
   }
 }
