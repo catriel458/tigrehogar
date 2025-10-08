@@ -2,34 +2,21 @@ import { Express, Request } from "express";
 import { storage } from "./storage";
 import { insertUserSchema, type InsertUser } from "@shared/schema";
 import * as bcrypt from "bcryptjs";
-import nodemailer from "nodemailer";
+import { Resend } from 'resend';
 import dotenv from 'dotenv';
 
 dotenv.config();
 
-const transporter = nodemailer.createTransport({
-  host: "smtp.gmail.com",
-  port: 465,
-  secure: true,
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASSWORD,
-  },
-  tls: {
-    rejectUnauthorized: false
-  }
-});
+// Inicializar Resend
+const resend = new Resend(process.env.RESEND_API_KEY);
 
-// Verificar la conexión al iniciar
-transporter.verify((error, success) => {
-  if (error) {
-    console.error('SMTP Connection Error:', error);
-  } else {
-    console.log('SMTP Server is ready to send emails');
-  }
-});
+// Verificar que la API key está configurada
+if (!process.env.RESEND_API_KEY) {
+  console.warn('⚠️ RESEND_API_KEY no está configurada');
+} else {
+  console.log('✅ Resend está configurado correctamente');
+}
 
-// ⭐ AGREGAR ESTAS FUNCIONES QUE FALTAN:
 async function hashPassword(password: string): Promise<string> {
   const salt = await bcrypt.genSalt(10);
   return bcrypt.hash(password, salt);
@@ -42,42 +29,64 @@ async function comparePasswords(password: string, hashedPassword: string): Promi
 async function sendVerificationEmail(email: string, token: string) {
   try {
     console.log('Attempting to send email to:', email);
-    console.log('Using SMTP user:', process.env.EMAIL_USER);
+    console.log('Using Resend with from:', process.env.EMAIL_USER);
     
     const verificationUrl = `${process.env.APP_URL}/verify-email?token=${token}`;
 
-    const info = await transporter.sendMail({
-      from: `"Tigre Hogar" <${process.env.EMAIL_USER}>`,
+    const { data, error } = await resend.emails.send({
+      from: 'Tigre Hogar <onboarding@resend.dev>', // Temporal, luego usarás tu dominio
       to: email,
       subject: "Verifica tu email - Tigre Hogar",
       html: `
         <h1>¡Bienvenido a Tigre Hogar!</h1>
         <p>Por favor haz clic en el siguiente enlace para verificar tu dirección de email:</p>
-        <a href="${verificationUrl}">${verificationUrl}</a>
+        <a href="${verificationUrl}" style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px;">Verificar Email</a>
+        <p>O copia este enlace en tu navegador:</p>
+        <p>${verificationUrl}</p>
       `,
     });
-    
-    console.log('Email sent successfully:', info.messageId);
+
+    if (error) {
+      console.error('Resend error:', error);
+      throw new Error(error.message);
+    }
+
+    console.log('✅ Email sent successfully:', data?.id);
   } catch (error) {
-    console.error('Failed to send verification email:', error);
+    console.error('❌ Failed to send verification email:', error);
     throw error;
   }
 }
 
 async function sendPasswordResetEmail(email: string, token: string) {
-  const resetUrl = `${process.env.APP_URL}/reset-password?token=${token}`;
+  try {
+    const resetUrl = `${process.env.APP_URL}/reset-password?token=${token}`;
 
-  await transporter.sendMail({
-    from: process.env.EMAIL_USER,
-    to: email,
-    subject: "Restablecer contraseña - Tigre Hogar",
-    html: `
-      <h1>Solicitud de restablecimiento de contraseña</h1>
-      <p>Haz clic en el siguiente enlace para restablecer tu contraseña:</p>
-      <a href="${resetUrl}">${resetUrl}</a>
-      <p>Este enlace expirará en 1 hora.</p>
-    `,
-  });
+    const { data, error } = await resend.emails.send({
+      from: 'Tigre Hogar <onboarding@resend.dev>',
+      to: email,
+      subject: "Restablecer contraseña - Tigre Hogar",
+      html: `
+        <h1>Solicitud de restablecimiento de contraseña</h1>
+        <p>Haz clic en el siguiente botón para restablecer tu contraseña:</p>
+        <a href="${resetUrl}" style="display: inline-block; padding: 10px 20px; background-color: #2196F3; color: white; text-decoration: none; border-radius: 5px;">Restablecer Contraseña</a>
+        <p>O copia este enlace en tu navegador:</p>
+        <p>${resetUrl}</p>
+        <p><strong>Este enlace expirará en 1 hora.</strong></p>
+        <p>Si no solicitaste este cambio, ignora este email.</p>
+      `,
+    });
+
+    if (error) {
+      console.error('Resend error:', error);
+      throw new Error(error.message);
+    }
+
+    console.log('✅ Password reset email sent successfully:', data?.id);
+  } catch (error) {
+    console.error('❌ Failed to send password reset email:', error);
+    throw error;
+  }
 }
 
 declare module "express-session" {
