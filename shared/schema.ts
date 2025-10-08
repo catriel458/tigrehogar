@@ -1,9 +1,9 @@
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
-import { integer, real, sqliteTable, text } from "drizzle-orm/sqlite-core";
+import { pgTable, serial, text, real, boolean, integer, timestamp } from "drizzle-orm/pg-core";
 
-export const products = sqliteTable("products", {
-  id: integer("id").primaryKey().notNull(),
+export const products = pgTable("products", {
+  id: serial("id").primaryKey(),
   name: text("name").notNull(),
   description: text("description").notNull(),
   price: real("price").notNull(),
@@ -11,17 +11,17 @@ export const products = sqliteTable("products", {
   category: text("category").notNull(),
 });
 
-export const users = sqliteTable("users", {
-  id: integer("id").primaryKey().notNull(), // // no es necesario usar `autoIncrement()` ni `primaryKey()` explícitamente
+export const users = pgTable("users", {
+  id: serial("id").primaryKey(),
   username: text("username").notNull().unique(),
   email: text("email").notNull().unique(),
   password: text("password").notNull(),
-  isAdmin: integer("is_admin", { mode: "boolean" }).default(false),
-  emailVerified: integer("email_verified", { mode: "boolean" }).default(false),
+  isAdmin: boolean("is_admin").default(false),
+  emailVerified: boolean("email_verified").default(false),
   verificationToken: text("verification_token"),
   resetPasswordToken: text("reset_password_token"),
   resetPasswordExpires: integer("reset_password_expires"),
-  createdAt: integer("created_at").default(Date.now()),
+  createdAt: timestamp("created_at").defaultNow(),
 });
 
 export const insertProductSchema = z.object({

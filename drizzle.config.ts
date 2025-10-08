@@ -1,18 +1,13 @@
-// drizzle.config.ts (CommonJS version)
-const { defineConfig } = require("drizzle-kit");
-const path = require("path");
-const fs = require("fs");
+import type { Config } from "drizzle-kit";
+import dotenv from "dotenv";
 
-const dataDir = path.join(__dirname, "data");
-if (!fs.existsSync(dataDir)) {
-  fs.mkdirSync(dataDir, { recursive: true });
-}
+dotenv.config();
 
-module.exports = defineConfig({
-  out: "./migrations",
+export default {
   schema: "./shared/schema.ts",
-  dialect: "sqlite",
+  out: "./drizzle",
+  dialect: "postgresql",
   dbCredentials: {
-    url: "file:./data/database.sqlite",
+    url: process.env.DATABASE_URL!,
   },
-});
+} satisfies Config;

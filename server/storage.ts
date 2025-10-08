@@ -1,12 +1,16 @@
 import { products, users, type Product, type InsertProduct, type User, type InsertUser } from "@shared/schema";
 import { eq } from "drizzle-orm";
 import { randomBytes } from "crypto";
-import { drizzle } from "drizzle-orm/better-sqlite3";
-import Database from "better-sqlite3";
+import { drizzle } from "drizzle-orm/node-postgres";
+import { Pool } from "pg";
 
-// Configurar conexión a SQLite
-const sqlite = new Database("./data/database.sqlite");
-const db = drizzle(sqlite);
+// Configurar conexión a PostgreSQL
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
+});
+
+const db = drizzle(pool);
 
 export interface IStorage {
   getProducts(): Promise<Product[]>;
