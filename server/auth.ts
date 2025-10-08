@@ -2,17 +2,9 @@ import { Express, Request } from "express";
 import { storage } from "./storage";
 import { insertUserSchema, type InsertUser } from "@shared/schema";
 import * as bcrypt from "bcryptjs";
-import * as ElasticEmail from '@elasticemail/elasticemail-client';
 import dotenv from 'dotenv';
 
 dotenv.config();
-
-// Configurar Elastic Email
-const defaultClient = ElasticEmail.ApiClient.instance;
-const apikey = defaultClient.authentications['apikey'];
-apikey.apiKey = process.env.ELASTIC_EMAIL_API_KEY || '';
-
-const emailsApi = new ElasticEmail.EmailsApi();
 
 if (!process.env.ELASTIC_EMAIL_API_KEY) {
   console.warn('⚠️ ELASTIC_EMAIL_API_KEY no está configurada');
@@ -35,7 +27,7 @@ async function sendVerificationEmail(email: string, token: string) {
     
     const verificationUrl = `${process.env.APP_URL}/verify-email?token=${token}`;
 
-    const emailMessageData = {
+    const emailData = {
       Recipients: [
         {
           Email: email
@@ -45,6 +37,7 @@ async function sendVerificationEmail(email: string, token: string) {
         Body: [
           {
             ContentType: "HTML",
+            Charset: "utf-8",
             Content: `
               <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
                 <h1 style="color: #333;">¡Bienvenido a Tigre Hogar!</h1>
@@ -72,10 +65,25 @@ async function sendVerificationEmail(email: string, token: string) {
       }
     };
 
-    const result = await emailsApi.emailsPost(emailMessageData);
+    const response = await fetch('https://api.elasticemail.com/v4/emails', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-ElasticEmail-ApiKey': process.env.ELASTIC_EMAIL_API_KEY || ''
+      },
+      body: JSON.stringify(emailData)
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('Elastic Email API error:', errorText);
+      throw new Error(`Failed to send email: ${response.status} ${errorText}`);
+    }
+
+    const result = await response.json();
     console.log('✅ Email sent successfully:', result);
   } catch (error: any) {
-    console.error('❌ Failed to send verification email:', error.response?.text || error.message || error);
+    console.error('❌ Failed to send verification email:', error.message || error);
     throw error;
   }
 }
@@ -86,7 +94,7 @@ async function sendPasswordResetEmail(email: string, token: string) {
     
     const resetUrl = `${process.env.APP_URL}/reset-password?token=${token}`;
 
-    const emailMessageData = {
+    const emailData = {
       Recipients: [
         {
           Email: email
@@ -96,6 +104,7 @@ async function sendPasswordResetEmail(email: string, token: string) {
         Body: [
           {
             ContentType: "HTML",
+            Charset: "utf-8",
             Content: `
               <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
                 <h1 style="color: #333;">Solicitud de restablecimiento de contraseña</h1>
@@ -129,10 +138,25 @@ async function sendPasswordResetEmail(email: string, token: string) {
       }
     };
 
-    const result = await emailsApi.emailsPost(emailMessageData);
+    const response = await fetch('https://api.elasticemail.com/v4/emails', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-ElasticEmail-ApiKey': process.env.ELASTIC_EMAIL_API_KEY || ''
+      },
+      body: JSON.stringify(emailData)
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('Elastic Email API error:', errorText);
+      throw new Error(`Failed to send email: ${response.status} ${errorText}`);
+    }
+
+    const result = await response.json();
     console.log('✅ Password reset email sent successfully:', result);
   } catch (error: any) {
-    console.error('❌ Failed to send password reset email:', error.response?.text || error.message || error);
+    console.error('❌ Failed to send password reset email:', error.message || error);
     throw error;
   }
 }
@@ -196,6 +220,7 @@ export function setupAuth(app: Express) {
     }
   });
 
+  // ... resto de las rutas igual que antes
   app.post("/api/login", async (req, res) => {
     try {
       const { username, password } = req.body;
