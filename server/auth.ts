@@ -2,14 +2,19 @@ import { Express, Request } from "express";
 import { storage } from "./storage";
 import { insertUserSchema, type InsertUser } from "@shared/schema";
 import * as bcrypt from "bcryptjs";
+import * as brevo from '@getbrevo/brevo';
 import dotenv from 'dotenv';
 
 dotenv.config();
 
-if (!process.env.ELASTIC_EMAIL_API_KEY) {
-  console.warn('⚠️ ELASTIC_EMAIL_API_KEY no está configurada');
+// Configurar Brevo
+const apiInstance = new brevo.TransactionalEmailsApi();
+apiInstance.setApiKey(brevo.TransactionalEmailsApiApiKeys.apiKey, process.env.BREVO_API_KEY || '');
+
+if (!process.env.BREVO_API_KEY) {
+  console.warn('⚠️ BREVO_API_KEY no está configurada');
 } else {
-  console.log('✅ Elastic Email está configurado correctamente');
+  console.log('✅ Brevo está configurado correctamente');
 }
 
 async function hashPassword(password: string): Promise<string> {
@@ -27,63 +32,39 @@ async function sendVerificationEmail(email: string, token: string) {
     
     const verificationUrl = `${process.env.APP_URL}/verify-email?token=${token}`;
 
-    const emailData = {
-      Recipients: [
-        {
-          Email: email
-        }
-      ],
-      Content: {
-        Body: [
-          {
-            ContentType: "HTML",
-            Charset: "utf-8",
-            Content: `
-              <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-                <h1 style="color: #333;">¡Bienvenido a Tigre Hogar!</h1>
-                <p style="font-size: 16px; color: #666;">
-                  Por favor haz clic en el siguiente botón para verificar tu dirección de email:
-                </p>
-                <a href="${verificationUrl}" 
-                   style="display: inline-block; padding: 12px 24px; margin: 20px 0; 
-                          background-color: #4CAF50; color: white; text-decoration: none; 
-                          border-radius: 5px; font-weight: bold;">
-                  Verificar Email
-                </a>
-                <p style="font-size: 14px; color: #999;">
-                  O copia este enlace en tu navegador:
-                </p>
-                <p style="font-size: 12px; color: #999; word-break: break-all;">
-                  ${verificationUrl}
-                </p>
-              </div>
-            `
-          }
-        ],
-        From: process.env.EMAIL_USER || 'noreply@tigrehogar.com',
-        Subject: "Verifica tu email - Tigre Hogar"
-      }
+    const sendSmtpEmail = new brevo.SendSmtpEmail();
+    
+    sendSmtpEmail.sender = { 
+      name: "Tigre Hogar", 
+      email: process.env.EMAIL_USER || 'catrielcabrera97@gmail.com'
     };
+    sendSmtpEmail.to = [{ email: email }];
+    sendSmtpEmail.subject = "Verifica tu email - Tigre Hogar";
+    sendSmtpEmail.htmlContent = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <h1 style="color: #333;">¡Bienvenido a Tigre Hogar!</h1>
+        <p style="font-size: 16px; color: #666;">
+          Por favor haz clic en el siguiente botón para verificar tu dirección de email:
+        </p>
+        <a href="${verificationUrl}" 
+           style="display: inline-block; padding: 12px 24px; margin: 20px 0; 
+                  background-color: #4CAF50; color: white; text-decoration: none; 
+                  border-radius: 5px; font-weight: bold;">
+          Verificar Email
+        </a>
+        <p style="font-size: 14px; color: #999;">
+          O copia este enlace en tu navegador:
+        </p>
+        <p style="font-size: 12px; color: #999; word-break: break-all;">
+          ${verificationUrl}
+        </p>
+      </div>
+    `;
 
-    const response = await fetch('https://api.elasticemail.com/v4/emails', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-ElasticEmail-ApiKey': process.env.ELASTIC_EMAIL_API_KEY || ''
-      },
-      body: JSON.stringify(emailData)
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('Elastic Email API error:', errorText);
-      throw new Error(`Failed to send email: ${response.status} ${errorText}`);
-    }
-
-    const result = await response.json();
-    console.log('✅ Email sent successfully:', result);
+    const result = await apiInstance.sendTransacEmail(sendSmtpEmail);
+    console.log('✅ Email sent successfully:', result.response.statusCode);
   } catch (error: any) {
-    console.error('❌ Failed to send verification email:', error.message || error);
+    console.error('❌ Failed to send verification email:', error.response?.text || error.message || error);
     throw error;
   }
 }
@@ -94,69 +75,45 @@ async function sendPasswordResetEmail(email: string, token: string) {
     
     const resetUrl = `${process.env.APP_URL}/reset-password?token=${token}`;
 
-    const emailData = {
-      Recipients: [
-        {
-          Email: email
-        }
-      ],
-      Content: {
-        Body: [
-          {
-            ContentType: "HTML",
-            Charset: "utf-8",
-            Content: `
-              <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-                <h1 style="color: #333;">Solicitud de restablecimiento de contraseña</h1>
-                <p style="font-size: 16px; color: #666;">
-                  Haz clic en el siguiente botón para restablecer tu contraseña:
-                </p>
-                <a href="${resetUrl}" 
-                   style="display: inline-block; padding: 12px 24px; margin: 20px 0; 
-                          background-color: #2196F3; color: white; text-decoration: none; 
-                          border-radius: 5px; font-weight: bold;">
-                  Restablecer Contraseña
-                </a>
-                <p style="font-size: 14px; color: #999;">
-                  O copia este enlace en tu navegador:
-                </p>
-                <p style="font-size: 12px; color: #999; word-break: break-all;">
-                  ${resetUrl}
-                </p>
-                <p style="font-size: 14px; color: #e74c3c; margin-top: 20px;">
-                  <strong>Este enlace expirará en 1 hora.</strong>
-                </p>
-                <p style="font-size: 12px; color: #999;">
-                  Si no solicitaste este cambio, ignora este email.
-                </p>
-              </div>
-            `
-          }
-        ],
-        From: process.env.EMAIL_USER || 'noreply@tigrehogar.com',
-        Subject: "Restablecer contraseña - Tigre Hogar"
-      }
+    const sendSmtpEmail = new brevo.SendSmtpEmail();
+    
+    sendSmtpEmail.sender = { 
+      name: "Tigre Hogar", 
+      email: process.env.EMAIL_USER || 'catrielcabrera97@gmail.com'
     };
+    sendSmtpEmail.to = [{ email: email }];
+    sendSmtpEmail.subject = "Restablecer contraseña - Tigre Hogar";
+    sendSmtpEmail.htmlContent = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <h1 style="color: #333;">Solicitud de restablecimiento de contraseña</h1>
+        <p style="font-size: 16px; color: #666;">
+          Haz clic en el siguiente botón para restablecer tu contraseña:
+        </p>
+        <a href="${resetUrl}" 
+           style="display: inline-block; padding: 12px 24px; margin: 20px 0; 
+                  background-color: #2196F3; color: white; text-decoration: none; 
+                  border-radius: 5px; font-weight: bold;">
+          Restablecer Contraseña
+        </a>
+        <p style="font-size: 14px; color: #999;">
+          O copia este enlace en tu navegador:
+        </p>
+        <p style="font-size: 12px; color: #999; word-break: break-all;">
+          ${resetUrl}
+        </p>
+        <p style="font-size: 14px; color: #e74c3c; margin-top: 20px;">
+          <strong>Este enlace expirará en 1 hora.</strong>
+        </p>
+        <p style="font-size: 12px; color: #999;">
+          Si no solicitaste este cambio, ignora este email.
+        </p>
+      </div>
+    `;
 
-    const response = await fetch('https://api.elasticemail.com/v4/emails', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-ElasticEmail-ApiKey': process.env.ELASTIC_EMAIL_API_KEY || ''
-      },
-      body: JSON.stringify(emailData)
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('Elastic Email API error:', errorText);
-      throw new Error(`Failed to send email: ${response.status} ${errorText}`);
-    }
-
-    const result = await response.json();
-    console.log('✅ Password reset email sent successfully:', result);
+    const result = await apiInstance.sendTransacEmail(sendSmtpEmail);
+    console.log('✅ Password reset email sent successfully:', result.response.statusCode);
   } catch (error: any) {
-    console.error('❌ Failed to send password reset email:', error.message || error);
+    console.error('❌ Failed to send password reset email:', error.response?.text || error.message || error);
     throw error;
   }
 }
@@ -220,7 +177,7 @@ export function setupAuth(app: Express) {
     }
   });
 
-  // ... resto de las rutas igual que antes
+  // ... (resto del código igual: login, logout, verify-email, etc.)
   app.post("/api/login", async (req, res) => {
     try {
       const { username, password } = req.body;
