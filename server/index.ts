@@ -8,6 +8,7 @@ import { registerRoutes } from "./routes";
 import { setupAuth } from "./auth";
 import session from "express-session";
 import createMemoryStore from "memorystore";
+import { existsSync } from "fs";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -61,14 +62,48 @@ setupAuth(app);
 // Configurar rutas API
 const server = registerRoutes(app);
 
-// Servir archivos estáticos del frontend (después de las rutas API)
-const publicPath = path.join(__dirname, '..', 'public');
+// Determinar la ruta correcta para archivos estáticos
+// En producción (Render): /opt/render/project/src/dist/public
+// En desarrollo: ./dist/public
+let publicPath;
+
+if (process.env.RENDER) {
+  // En Render, el código está en /opt/render/project/src/
+  publicPath = '/opt/render/project/src/dist/public';
+} else {
+  // En local, relativo a donde está el archivo compilado
+  publicPath = path.join(__dirname, 'public');
+}
+
+console.log('=== Server Configuration ===');
+console.log('Environment:', process.env.NODE_ENV);
+console.log('__dirname:', __dirname);
+console.log('Public path:', publicPath);
+console.log('Public path exists:', existsSync(publicPath));
+
+if (existsSync(publicPath)) {
+  const indexPath = path.join(publicPath, 'index.html');
+  console.log('index.html exists:', existsSync(indexPath));
+}
+
 app.use(express.static(publicPath));
 
-// Todas las rutas no-API deben servir index.html (para SPA)
+// SPA fallback
 app.get('*', (req, res) => {
   if (!req.path.startsWith('/api')) {
-    res.sendFile(path.join(publicPath, 'index.html'));
+    const indexPath = path.join(publicPath, 'index.html');
+    
+    if (existsSync(indexPath)) {
+      res.sendFile(indexPath);
+    } else {
+      res.status(404).json({ 
+        error: 'Frontend build not found',
+        publicPath,
+        indexPath,
+        __dirname,
+        cwd: process.cwd()
+      });
+    }
   }
 });
 
